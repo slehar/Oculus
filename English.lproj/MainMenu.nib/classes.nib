@@ -1,0 +1,19 @@
+{
+    IBClasses = (
+        {
+            ACTIONS = {setTransparency = id; showArrayEditor = id; }; 
+            CLASS = ArrayEditor; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {arrayView = id; window = id; }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            CLASS = ScrollImageView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {controller = id; }; 
+            SUPERCLASS = NSImageView; 
+        }
+    ); 
+    IBVersion = 1; 
+}

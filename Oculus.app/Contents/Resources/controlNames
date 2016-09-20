@@ -1,0 +1,22 @@
+(
+    {cepstrum = {floats = {1 = float_1; 2= float_2; 6 = hi-clip; 5 = lo-clip;}; ints = {1 = xblocks; 2 = yblocks; }; }; }, 
+    {"artificial cepstrum" = {floats = {1 = extent; }; }; }, 
+    {"artificial average power" = {}; },
+	{"PSF powerspectrum" = {floats = {1 = extent; 2 = angle; 4 = thick; 8 = nstds;}; }; },
+	{"average powerspectrum" = {ints = {1 = xblocks; 2 = yblocks;};}; },
+	{"add noise" = {floats = {7 = "noise/signal";};}; },
+	{"PSF blur image" = {floats = {1 = extent; 2 = angle; }; }; },
+	{"two PSFs convolve" = {floats = {1 = extent; 2 = angle; 4 = thick; 8 = nstds;}; }; },
+	{"simulated restore" = {floats = {1 = extent; 2 = angle; 3 = snr; }; }; },
+	{"edging demo" = {floats = {1 = extent; 2 = angle; 8 = nstds; }; }; },
+	{"deblur" = {floats = {1 = extent; 2 = angle; 3 = snr; 4 = thick; 5 = lo-clip; 6 = hi-clip; 7 = modulation; 8 = nstds; 13 = psfgain; 14 = invert;  }; ints = {1 = "4=cnvlvrad"; 2 = "FLOD";}; }; },
+	{"deblur with windows" = {}; },
+	{"show map Transform" = {floats = {1 = extent; 2 = angle; 3 = snr; 4 = thick; }; }; },
+	{"display PSF" = {floats = {1 = extent; 2 = angle; 4 = thick; 8 = nstds; }; }; },
+	{"Fourier Pattern Filter" = {floats = {1 = threshold;}; ints = {1 = xblocks; 2 = yblocks;};}; },
+	{"pattern removal" = {floats = {1= threshold; 6 = hi-clip; 5 = lo-clip; 14 = invert;}; ints = {1 = xblocks; 2 = yblocks; }; }; },
+	{"FFT" = {}; },
+	{"test nyquist" = {}; },
+	{"bandpass filtering" = {}; },
+	{"stretch" = {}; }
+)

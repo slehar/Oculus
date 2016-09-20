@@ -1,0 +1,89 @@
+{\rtf1\ansi\ansicpg932\cocoartf1038\cocoasubrtf350
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Monaco;\f2\fnil\fcharset0 Menlo-Regular;
+}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural
+
+\f0\fs24 \cf0 9/18/04	1am		2.5am						1.5 hr\
+	Created Xcode project. Laid out interface. Made basic controller code. Loads images.\
+\
+9/19/04	12:30am	1am						1 hr\
+	Improved interface. Made image scaling work.\
+\
+9/24/04	3pm		3:30pm					0.5hr\
+	Worked on panning images with the cursor.\
+\
+9/26/04	1:30am	3:00am					1.5hr\
+	Made dual image panning work with grabbing and scrolling.\
+\
+9/26/04	1:30pm	3:00pm					1.5hr\
+	Added saving of images and Oculus documents.\
+10/9/04	1:00am	2:30am					1.5hr\
+	Set up fftw library. Worked on incorporating Dr. Lehar's code.\
+10/20/04	3:00pm	4:00pm					1hr\
+	Tried updating the code for FFTW3. Had some problems and gave up since I'm not familair with FFTW. See http://www.fftw.org/fftw3_doc/Upgrading-from-FFTW-version-2.html\
+	Installed FFTW version 2. Code now compiles. Tried to interface with Dr. Lehar's code.\
+10/23/04	5:00pm	7:30pm					2.5hr = 11hr\
+	Successfully got FFTW linked correctly with XCode. Interfaced with Dr. Lehar's code. FFT actually processes and updates, but there is something wrong with the bitmap data conversion. It may have to do with an alpha channel.\
+10/25/04	4:30pm	6:00pm					1.5hr\
+	Tried to figure out why the bitmap data conversion is screwy. Got confused by Dr. Lehar's code so I tried to rewrite parts of it. Not working out so far.\
+10/30/04	11am		12:30pm					1.5hr\
+	Got the bitmap data conversion working. If I set 
+\f1\fs20 \CocoaLigature0 Int_3 = 20
+\f0\fs24 \CocoaLigature1  so the else case is called which just copies the array to brray, the image displays, though the colors are sometimes slightly different between source and output. Not sure if that is expected. Some processing routines such as 
+\f1\fs20 \CocoaLigature0 ADD_NOISE(Int_3=5) 
+\f0\fs24 \CocoaLigature1 work perfectly. Having some trouble with 
+\f1\fs20 \CocoaLigature0 PATTERN_REMOVAL(Int_3=15)
+\f0\fs24 \CocoaLigature1 . It seems to only do half of the image sometimes, or the result is all black.\
+	Tried to wrap FFTW into the binary. Added libsfftw.a to the copy files build phase, but I'm not sure what else to do.\
+11/7/04	3pm		4pm						1hr\
+	Figured out how to statically link the FFTW library. The linker must not be able to see the dynamic libraries, or it will use those as default. Thus, I copied the static library and the header file to the project folder and included the files from there.\
+1/21/05	9pm		10:30pm					1.5hr\
+	Revamped the interface to include fields for 
+\f1\fs20 \CocoaLigature0 int1, int2, int3, int4 (RGBProcessing), float1, float2, float3, and float4
+\f0\fs24 \CocoaLigature1 . Processing no longer takes place automatically after changing a parameter -- the return/enter key must be pressed, or the Process button be clicked. Also added options to save as PNG Image and JPEG Image.\
+1/22/05	2pm		3pm						1hr\
+	Fixed a bug where if a parameter was changed and then the process button clicked, the old parameter value was used for processing. Moved the control panel for better viewing on smaller screens. Investigated the FFT bug.\
+2/12/05	11pm		12am						1hr\
+	Investigated FFT bug. Figured out the problem. I was including the single precision FFTW library. Switching to the double precision FFTW library fixed it! That is, libdfftw.a and dfftw.h.\
+2/19/05	1:45am	4:15am					2.5hr = 21hr\
+	Set all controls to small size. Made scale from 100% to 800% in steps of 100%. Added radio buttons next to the floats to activate the dynamic slider. Added brightness & contrast controls (but no functionality yet). Will probably have to look into apple's vImage image processing framework to do the contrast control. Added more floats. Cleaned up code so we no longer use local variables for the parameter values. We now just get them from the UI when needed. This makes it easier to add more floats. Had to turn off saving & loading files temporarily since this change broke that code.\
+2/27/05	1:15am	3:15am					2hr\
+	Added support for processing grayscale images. Added code for additional floats (5,6,7). Added memory for dynamic slider min/max values. Added bounds checking for the dynamic slider min/max with respect to the current value.\
+3/14/05	2:15am	4:15am					2hr\
+	Fixed a memory leak. Merged with Dr. Lehar's latest FFT code. Re-enabled saving as images, but not as Oculus documents. Added adjust brightness functionality. Still unsure about using apple's vImage framework for doing contrast adjustment... it's too complicated.\
+3/14/05	1pm		1:30pm					0.5hr\
+	Added 7 more sliders and PSF image. Revamped interface.\
+3/15/05	11am		4:30pm					5.5hr = 31hr\
+	Removed the contrast and brightness sliders. Made the new group of float parameters work. Made the PSF display. Added JPEG compression controls to the save panel. Added a dynamic pop up menu for the processing function and automatic labels for the processing functions (see the controlNames file). The format of this file is a little dizzying at first. Strings only need to be surrounded by quotes if there are spaces in it. Labels for both float and int parameters can be used. See the temporary 
+\f1\fs20 \CocoaLigature0 cepstrum 
+\f0\fs24 \CocoaLigature1 entry for an example of the syntax.\
+4/12/05	1:30am	3:30am					2hr\
+	Finished hooking up 2nd group of floats to the slider. Changed maximum magnification to 1200%. Made the PSF view scale with the slider and crop the central portion. Note that the actual scales don't match up: The source image is first resized to a small 150x150 image for fast processing. Then that 150x150 is scaled according to the magnification slider. Is that a correct implementation or must the pixel sizes correspond between the PSF view and output view? Added the Oculus application icon.\
+4/12/05	3:10pm	5:40pm					2.5hr\
+	Tried to have the images scale from the center of the scroll view, but had a lot of trouble. I was able to get close, but there were many redraw artifacts that I couldn't figure out. Tried just about everything, but no luck. I didn't want to waste time so I reverted back to normal. Fixed resizing of the image views that I accidently broke in the last version.\
+5/14/05	9:10pm	9:40pm					0.5hr\
+	Fixed autoresize of the source image when the window is resized. Made zoom slider larger. Added image size text field.\
+6/5/05		10am		11am						1hr\
+	Created auxiliary array editor window accessible from the Tools menu. Allows scrolling with the cursor. Allows setting window transparency with a slider. Still need to hook up the real part of barray or such to the image view.\
+6/19/05	5:10pm	5:40pm					0.5hr\
+	Tried to figure out how to connect brray to the new window.\
+7/4/05		2:30pm	5:30pm					3hr\
+	Merged changes in deblurring applications, functions, and control names files from Dr. Lehar's code. Connected drray to the array editor window. To test, 
+\f1\fs20 \CocoaLigature0 Int_1 = 4, Int_3 = 10, thick = 2, modulation = 2
+\f0\fs24 \CocoaLigature1 . The bitmap pointer to the array editor image is passed as an input to the 
+\f1\fs20 \CocoaLigature0 processImage
+\f0\fs24 \CocoaLigature1  function.\
+11/29/2010\
+	Compiled fftw version 2 with ./configure CC="gcc -arch i386" CXX="g++ -arch i386".\
+12/24/2010\
+	Compiled fftw version 2 with ./configure CFLAGS="-arch i386" --enable-float\
+02/09/2011\
+	- remove the --enable-float in the FFTW compilation. we wanted the double precision version all along\
+	- fix a couple memory leaks\
+	- make the PSF display work even if the RGB checkbox is disabled\
+	- add a function declaration for 
+\f2\fs22 \CocoaLigature0 make_fuzzy(). 
+\f0\fs24 \CocoaLigature1 Without this, the radius parameter was garbage.\
+	- make the input fields, function selector, and RGB checkbox all update the image on change. the "process" button should no longer be needed.\
+	}
