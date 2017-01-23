@@ -31,7 +31,7 @@ imgFile = tkFileDialog.askopenfilename(
 
 # Open figure window
 winXSize = 16
-winYSize = 6
+winYSize = 16
 winAspect = winXSize/winYSize
 plt.close('all')
 fig = plt.figure(figsize=(winXSize, winYSize))
@@ -48,23 +48,27 @@ def press(event):
 fig.canvas.mpl_connect('key_press_event', press)
 
 # Lock Sliders Checkbox
-rax = plt.axes([0.2, 0.05, 0.1/winAspect, 0.1])
-check = CheckButtons(rax, ['Lock'], [False])
+rax = plt.axes([0.45, 0.2, 0.237/winAspect, 0.1])
+check = CheckButtons(rax, ['Disc', 'Line'], [False,True])
 
 def func(label):
     global slidersLocked
     
-    if   label == 'Lock':
-        slidersLocked = check.lines[0][0].get_visible()
+    if   label == 'Disc':
+        pass
+#        slidersLocked = check.lines[0][0].get_visible()
+    if   label == 'Line':
+        pass
+#        slidersLocked = check.lines[0][0].get_visible()
     plt.draw()
     
 check.on_clicked(func)
 
 # Axes for Original Image
-axOrig = fig.add_axes([.05, .2, .7/winAspect, .7])
-axOrig.axes.set_xticks([])
-axOrig.axes.set_yticks([])
-axOrig.set_title('Original')
+axBefore = fig.add_axes([.05, .6, .35/winAspect, .35])
+axBefore.axes.set_xticks([])
+axBefore.axes.set_yticks([])
+axBefore.set_title('before')
 
 # Read image and display
 imgPil = Image.open(imgFile).convert('LA')
@@ -77,7 +81,7 @@ sigma=xSize/100.
 gauss=np.array([[((i**2+j**2)/(2.*sigma**2)) for i in range( -x,x)] for j in range(-y,y)])
 gauss=1.-gauss
 # Axes for Fourier Image
-axFour = fig.add_axes([.3, .2, .7/winAspect, .7])
+axFour = fig.add_axes([.05, .2, .35/winAspect, .35])
 axFour.axes.set_xticks([])
 axFour.axes.set_yticks([])
 axFour.set_title('Fourier')
@@ -109,10 +113,10 @@ fourPlot = plt.imshow(filtLog, cmap='gray')
 plt.pause(.001)
 
 # Axes for Inverse Fourier Image
-axFourInv = fig.add_axes([.56, .2, .7/winAspect, .7])
-axFourInv.axes.set_xticks([])
-axFourInv.axes.set_yticks([])
-axFourInv.set_title('Inverse Fourier')
+axAfter = fig.add_axes([.35, .6, .35/winAspect, .35])
+axAfter.axes.set_xticks([])
+axAfter.axes.set_yticks([])
+axAfter.set_title('After')
 
 # Inverse Fourier Transform
 fourIshft = np.fft.ifftshift(filtImg)
@@ -121,12 +125,12 @@ fourReal  = np.real(fourInv)
 invPlot = plt.imshow(fourReal, cmap='gray')
 
 # Filter radius sliders
-axSlider1 = fig.add_axes([0.3, 0.125, 0.234, 0.04])
+axSlider1 = fig.add_axes([0.45, 0.5, 0.234, 0.04])
 axSlider1.set_xticks([])
 axSlider1.set_yticks([])
 
 #axSlider2 = plt.axes([0.3, 0.05, 0.237, 0.04])
-axSlider2 = fig.add_axes([0.3, 0.05, 0.237, 0.04])
+axSlider2 = fig.add_axes([0.45, 0.45, 0.237, 0.04])
 axSlider2.set_xticks([])
 axSlider2.set_yticks([])
 
@@ -135,18 +139,18 @@ slider2 = Slider(axSlider2, 'r2', 0.0, xSize, valinit=xSize*rad2)
 rad1, rad2 = slider1.val, slider2.val
 
 # Filter angular sliders
-axSlider3 = fig.add_axes([0.7, 0.125, 0.234, 0.04])
+axSlider3 = fig.add_axes([0.45, 0.4, 0.234, 0.04])
 axSlider3.set_xticks([])
 axSlider3.set_yticks([])
 
 #axSlider4 = plt.axes([0.7, 0.05, 0.237, 0.04])
-axSlider4 = fig.add_axes([0.7, 0.05, 0.237, 0.04])
+axSlider4 = fig.add_axes([0.45, 0.35, 0.237, 0.04])
 axSlider4.set_xticks([])
 axSlider4.set_yticks([])
 
-slider3 = Slider(axSlider3, 'angle',  -np.pi, np.pi, valinit=0)
+slider3 = Slider(axSlider3, 'snr',  -np.pi, np.pi, valinit=0)
 slider4 = Slider(axSlider4, 'thresh', -1., 1., valinit=-1.)
-angle, angleThresh = slider3.val, slider4.val
+snr, angleThresh = slider3.val, slider4.val
 
 def update():
     global filtImg
@@ -161,7 +165,7 @@ def update():
     filtImg = fourShft * xmask
     filtLog = np.log(np.maximum(np.abs(filtImg),1.))
     fourPlot.set_data(filtLog)
-    plt.sca(axFourInv)    
+    plt.sca(axAfter)    
     fourIshft = np.fft.ifftshift(filtImg)
     fourInv  = np.fft.ifft2(fourIshft)
     fourReal = np.real(fourInv)
