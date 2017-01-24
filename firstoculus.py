@@ -80,17 +80,26 @@ x,y=hafX,hafY
 sigma=xSize/100.
 gauss=np.array([[((i**2+j**2)/(2.*sigma**2)) for i in range( -x,x)] for j in range(-y,y)])
 gauss=1.-gauss
+
+
 # Axes for Fourier Image
-axFour = fig.add_axes([.05, .2, .35/winAspect, .35])
+axFour = fig.add_axes([.65, .6, .35/winAspect, .35])
 axFour.axes.set_xticks([])
 axFour.axes.set_yticks([])
 axFour.set_title('Fourier')
+
+# Axes for PSF Image
+axPSF = fig.add_axes([.05, .2, .35/winAspect, .35])
+axPSF.axes.set_xticks([])
+axPSF.axes.set_yticks([])
+axPSF.set_title('PSF')
 
 # Fourier Transform
 fourImg  = np.fft.fft2(imgNp)
 fourShft = np.fft.fftshift(fourImg)
 fourLog  = np.log(np.abs(fourShft))
 
+plt.sca(axFour)
 fourPlot = plt.imshow(fourLog, cmap='gray',
                       vmin=fourLog.min(),
                       vmax=fourLog.max())
