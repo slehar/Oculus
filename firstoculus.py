@@ -177,26 +177,34 @@ snr, angleThresh = slider3.val, slider4.val
 
 # This is where all the action happens
 def update():
-    global filtImg
-    plt.sca(axFour)
-#    maskR1 = (distImg > rad1)
-#    maskR2 = (distImg < rad2)
-    maskRadial = (distImg < radius)
-#    maskAngle = (np.sin(angleImg*2. + angle) >= angleThresh)          
-#    maskImg = np.logical_and(maskAngle, maskRadial)  
-#    maskImg[hafY,hafX] = True
-    xmask = ma.make_mask(maskRadial)
-    filtImg = fourShft * xmask
-    filtLog = np.log(np.maximum(np.abs(filtImg),1.))
-    fourPlot.set_data(filtLog)
-    plt.sca(axAfter)    
+    global filtImg, imgPSF
+    
+    # PSF in axPSF
+    imgPSF = (distImg < radius)
+    xmask = ma.make_mask(imgPSF)
+    imgPSF = imgPSF.astype(float) 
+    plt.sca(axPSF)
+    psfPlot.set_data(imgPSF)
+      
+    # Fourier masked in axFour
+#    filtImg = fourShft * xmask
+#    filtLog = np.log(np.maximum(np.abs(filtImg),1.))
+#    plt.sca(axFour)
+#    fourPlot.set_data(filtLog)
+    
+    # Inverse fourier in After
     fourIshft = np.fft.ifftshift(filtImg)
     fourInv  = np.fft.ifft2(fourIshft)
     fourReal = np.real(fourInv)
-    invPlot = plt.imshow(fourReal, cmap='gray')    
+    plt.sca(axAfter)
+    invPlot.set_data(fourReal)
     
-    psfPlot.set_data(xmask)
-    
+    #take transform of psf and displaying it 
+    fourPSF = np.fft.fft2(imgPSF)
+    fourShftPSF = np.fft.fftshift(fourPSF)
+    psfLog = np.log(np.maximum(np.abs(fourShftPSF),1.))
+    plt.sca(axFour)    
+    fourPlot.set_data(psfLog)
     plt.pause(.001)
 
 def update1(val):
@@ -231,8 +239,7 @@ slider4.on_changed(update4)
 
 # Show image
 plt.ion()
-plt.sca(axFour)
-#plt.pause(.001)
+#plt.sca(axFour)
 plt.show()
 
 # Pop fig window to top]]
