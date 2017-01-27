@@ -17,18 +17,18 @@ import numpy.ma as ma
 import sys
 
 # Global Variables
-rad1 = 0.
+radius = 0.2
 rad2 = .15
 slidersLocked = False
 angle = 0.
 angleThresh =  -1.
 
 # Get image using finder dialog
-root = Tkinter.Tk()
-root.withdraw() # Hide the root window
-imgFile = tkFileDialog.askopenfilename(
-    initialfile = 'Rover.png')
-
+#root = Tkinter.Tk()
+#root.withdraw() # Hide the root window
+#imgFile = tkFileDialog.askopenfilename(
+#    initialfile = 'Rover.png')
+imgFile = 'Rover.png'
 # Open figure window
 winXSize = 16
 winYSize = 16
@@ -74,6 +74,7 @@ axBefore.set_title('before')
 imgPil = Image.open(imgFile).convert('LA')
 imgNp = np.array(imgPil.convert('L'))/255.
 ySize, xSize = imgNp.shape
+radius = min(ySize,xSize)/4
 hafY, hafX = int(ySize/2), int(xSize/2)
 imgplot = plt.imshow(imgPil, cmap='gray')
 x,y=hafX,hafY
@@ -94,6 +95,9 @@ axPSF.axes.set_xticks([])
 axPSF.axes.set_yticks([])
 axPSF.set_title('PSF')
 
+yy, xx = np.mgrid[-hafY:hafY, -hafX:hafX]
+
+
 # Fourier Transform
 fourImg  = np.fft.fft2(imgNp)
 fourShft = np.fft.fftshift(fourImg)
@@ -106,17 +110,25 @@ fourPlot = plt.imshow(fourLog, cmap='gray',
 plt.pause(.001)
 
 #### Fourier Filtering ####
-yy, xx = np.mgrid[-hafY:hafY, -hafX:hafX]
 distImg = np.sqrt(xx**2 + yy**2)
+
+# Generate PSF Image
+imgPSF = (distImg < radius)# This is a circle PSF
+imgPSF = imgPSF.astype(float) 
+plt.sca(axPSF) # Set imgPSF the "current axes"
+psfPlot = plt.imshow(imgPSF, cmap='gray')
+
 
 angleImg = np.arctan2(yy,xx)
 angleImgFlip = np.fliplr(np.flipud(angleImg))
 #here we're doing the filtering
-filtImg=fourShft * gauss
+filtImg=fourShft * imgPSF
 #maskImg = (distImg < (rad2 * xSize))
 #xmask = ma.make_mask(maskImg)
 #filtImg = fourShft * xmask
 filtLog = np.log(np.maximum(np.abs(filtImg),1.))
+
+plt.sca(axFour) # Set axFour the "current axes"
 
 fourPlot = plt.imshow(filtLog, cmap='gray')
 plt.pause(.001)
@@ -143,7 +155,9 @@ axSlider2 = fig.add_axes([0.45, 0.45, 0.237, 0.04])
 axSlider2.set_xticks([])
 axSlider2.set_yticks([])
 
-slider1 = Slider(axSlider1, 'r1', 0.0, xSize, valinit=xSize*rad1)
+hafRadiusMax = min(ySize,xSize) # Setting upper limit to radius focus blur
+slider1 = Slider(axSlider1, 'radius', 0.0, hafRadiusMax, valinit=hafRadiusMax/2)
+
 slider2 = Slider(axSlider2, 'r2', 0.0, xSize, valinit=xSize*rad2)
 rad1, rad2 = slider1.val, slider2.val
 
@@ -161,16 +175,17 @@ slider3 = Slider(axSlider3, 'snr',  -np.pi, np.pi, valinit=0)
 slider4 = Slider(axSlider4, 'thresh', -1., 1., valinit=-1.)
 snr, angleThresh = slider3.val, slider4.val
 
+# This is where all the action happens
 def update():
     global filtImg
     plt.sca(axFour)
-    maskR1 = (distImg > rad1)
-    maskR2 = (distImg < rad2)
-    maskRadial = np.logical_and(maskR1, maskR2)
-    maskAngle = (np.sin(angleImg*2. + angle) >= angleThresh)          
-    maskImg = np.logical_and(maskAngle, maskRadial)  
-    maskImg[hafY,hafX] = True
-    xmask = ma.make_mask(maskImg)
+#    maskR1 = (distImg > rad1)
+#    maskR2 = (distImg < rad2)
+    maskRadial = (distImg < radius)
+#    maskAngle = (np.sin(angleImg*2. + angle) >= angleThresh)          
+#    maskImg = np.logical_and(maskAngle, maskRadial)  
+#    maskImg[hafY,hafX] = True
+    xmask = ma.make_mask(maskRadial)
     filtImg = fourShft * xmask
     filtLog = np.log(np.maximum(np.abs(filtImg),1.))
     fourPlot.set_data(filtLog)
@@ -178,12 +193,15 @@ def update():
     fourIshft = np.fft.ifftshift(filtImg)
     fourInv  = np.fft.ifft2(fourIshft)
     fourReal = np.real(fourInv)
-    invPlot = plt.imshow(fourReal, cmap='gray')       
+    invPlot = plt.imshow(fourReal, cmap='gray')    
+    
+    psfPlot.set_data(xmask)
+    
     plt.pause(.001)
 
 def update1(val):
-    global rad1
-    rad1 = slider1.val
+    global radius
+    radius = slider1.val
     update()
 
 def update2(val):
