@@ -18,7 +18,9 @@ import sys
 
 # Global Variables
 radius = 0.2
-rad2 = .15
+rad2=0
+snr = .1
+isnr=1/snr
 slidersLocked = False
 angle = 0.
 angleThresh =  -1.
@@ -79,9 +81,10 @@ hafY, hafX = int(ySize/2), int(xSize/2)
 imgplot = plt.imshow(imgPil, cmap='gray')
 x,y=hafX,hafY
 sigma=xSize/100.
-gauss=np.array([[((i**2+j**2)/(2.*sigma**2)) for i in range( -x,x)] for j in range(-y,y)])
-gauss=1.-gauss
 
+K=np.zeros(imgNp.shape)#array for inverse filter
+
+#psf image
 
 # Axes for Fourier Image
 axFour = fig.add_axes([.65, .6, .35/winAspect, .35])
@@ -171,13 +174,13 @@ axSlider4 = fig.add_axes([0.45, 0.35, 0.237, 0.04])
 axSlider4.set_xticks([])
 axSlider4.set_yticks([])
 
-slider3 = Slider(axSlider3, 'snr',  -np.pi, np.pi, valinit=0)
+slider3 = Slider(axSlider3, 'snr',  0, 1, valinit=.1)
 slider4 = Slider(axSlider4, 'thresh', -1., 1., valinit=-1.)
 snr, angleThresh = slider3.val, slider4.val
 
 # This is where all the action happens
 def update():
-    global filtImg, imgPSF
+    global filtImg, imgPSF, K
     
     # PSF in axPSF
     imgPSF = (distImg < radius)
@@ -192,12 +195,12 @@ def update():
 #    plt.sca(axFour)
 #    fourPlot.set_data(filtLog)
     
-    # Inverse fourier in After
-    fourIshft = np.fft.ifftshift(filtImg)
-    fourInv  = np.fft.ifft2(fourIshft)
-    fourReal = np.real(fourInv)
-    plt.sca(axAfter)
-    invPlot.set_data(fourReal)
+#    # Inverse fourier in After
+#    fourIshft = np.fft.ifftshift(filtImg)
+#    fourInv  = np.fft.ifft2(fourIshft)
+#    fourReal = np.real(fourInv)
+#    plt.sca(axAfter)
+#    invPlot.set_data(fourReal)
     
     #take transform of psf and displaying it 
     fourPSF = np.fft.fft2(imgPSF)
@@ -205,6 +208,20 @@ def update():
     psfLog = np.log(np.maximum(np.abs(fourShftPSF),1.))
     plt.sca(axFour)    
     fourPlot.set_data(psfLog)
+    
+    # Create the Linear MAP filter, K(u,v)   
+    conjfourPSF = np.conj(imgPSF)
+    K=(conjfourPSF + isnr)/(conjfourPSF*fourPSF+isnr)
+    #do the inverse filtering
+    fourResult=fourImg*K#convolution in the fourier domain
+    Result=np.fft.ifft2(fourResult)
+
+    fourIshft = np.fft.ifftshift(Result)
+    fourInv  = np.fft.ifft2(fourIshft)
+    fourReal = np.real(fourInv)
+    plt.sca(axAfter)
+    invPlot.set_data(fourReal)
+    
     plt.pause(.001)
 
 def update1(val):
@@ -222,8 +239,8 @@ def update2(val):
     update()
 
 def update3(val):
-    global angle
-    angle = slider3.val
+    global snr
+    snr = slider3.val
     update()
 
 def update4(val):
