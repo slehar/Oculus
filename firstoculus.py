@@ -211,15 +211,16 @@ def update():
     # Create the Linear MAP filter, K(u,v) 
     isnr=1/snr
     conjfourPSF = np.conj(imgPSF)
-#    K=np.divide((conjfourPSF + isnr),(conjfourPSF*fourPSF+isnr))
-    K=(conjfourPSF + isnr)/(conjfourPSF*fourPSF+isnr)
+#    K=(conjfourPSF + isnr)/(conjfourPSF*fourPSF+isnr)
+    K=1/fourShftPSF 
     KLog = np.log(np.maximum(np.abs(K),1.))
     KLog = KLog/complex(KLog.max())
-    diagPlot.set_data(KLog.real) #Plotting diag data
+    diagPlot.set_data(K.real) #Plotting diag data
     
     #do the inverse filtering
     fourResult=fourImg*K  #convolution in the fourier domain
     Result=np.fft.ifft2(fourResult)
+    Resultshft=np.fft.fftshift(Result)
     resultReal = np.real(Result)
     invPlot.set_data(resultReal)
     
