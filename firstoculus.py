@@ -182,7 +182,7 @@ axSlider4 = fig.add_axes([0.41, 0.35, 0.237, 0.04])
 axSlider4.set_xticks([])
 axSlider4.set_yticks([])
 
-slider3 = Slider(axSlider3, 'snr',  0, 1, valinit=.1)
+slider3 = Slider(axSlider3, 'snr',  0.0001, 1, valinit=.1)
 slider4 = Slider(axSlider4, 'thresh', -1., 1., valinit=-1.)
 snr, angleThresh = slider3.val, slider4.val
 
@@ -192,13 +192,13 @@ diagPlot = plt.imshow(K, cmap='gray',vmin=0.,vmax=1.)
 
 # This is loop where all the action happens
 def update():
-    global filtImg, imgPSF, K, KLog, psfLog
+    global filtImg, imgPSF, K, KLog, psfLog, resultReal
     
     # PSF in axPSF
     imgPSF = (distImg < radius)
 #    xmask = ma.make_mask(imgPSF)
-    imgPSF = imgPSF.astype(float) 
-    psfPlot.set_data(imgPSF)
+    realimgPSF = imgPSF.astype(float) 
+    psfPlot.set_data(realimgPSF)
           
     #take transform of psf and displaying it 
     fourPSF = np.fft.fft2(imgPSF)
@@ -218,10 +218,10 @@ def update():
     #do the inverse filtering
     fourResult=np.multiply(fourImg, K)#convolution in the fourier domain
     Result=np.fft.ifft2(fourResult)
-    fourIshft = np.fft.ifftshift(Result)
-    fourInv  = np.fft.ifft2(fourIshft)
-    fourReal = np.real(fourInv)
-    invPlot.set_data(fourReal)
+#   fourIshft = np.fft.ifftshift(Result)
+#    fourInv  = np.fft.ifft2(fourIshft)
+    resultReal = np.real(Result)
+    invPlot.set_data(resultReal)
     
     plt.pause(.001)
 
