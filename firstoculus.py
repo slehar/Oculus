@@ -50,7 +50,7 @@ def press(event):
 fig.canvas.mpl_connect('key_press_event', press)
 
 # Lock Sliders Checkbox
-rax = plt.axes([0.45, 0.2, 0.237/winAspect, 0.1])
+rax = plt.axes([0.41, 0.2, 0.237/winAspect, 0.1])
 check = CheckButtons(rax, ['Disc', 'Line'], [False,True])
 
 def func(label):
@@ -137,7 +137,7 @@ fourPlot = plt.imshow(filtLog, cmap='gray',
                       vmax=1.)
 plt.pause(.001)
 
-# Axes for Inverse Fourier Image
+# Axes for Inverse After Image
 axAfter = fig.add_axes([.35, .6, .35/winAspect, .35])
 axAfter.axes.set_xticks([])
 axAfter.axes.set_yticks([])
@@ -150,13 +150,20 @@ fourReal  = np.real(fourInv)
 plt.sca(axAfter)
 invPlot = plt.imshow(fourReal, cmap='gray')
 
+# Axes for Diagnostic window
+axDiag = fig.add_axes([.65, .2, .35/winAspect, .35])
+axDiag.axes.set_xticks([])
+axDiag.axes.set_yticks([])
+axDiag.set_title('Diagnostic')
+
+
 # Filter radius sliders
-axSlider1 = fig.add_axes([0.45, 0.5, 0.234, 0.04])
+axSlider1 = fig.add_axes([0.41, 0.5, 0.234, 0.04])
 axSlider1.set_xticks([])
 axSlider1.set_yticks([])
 
 #axSlider2 = plt.axes([0.3, 0.05, 0.237, 0.04])
-axSlider2 = fig.add_axes([0.45, 0.45, 0.237, 0.04])
+axSlider2 = fig.add_axes([0.41, 0.4535, 0.237, 0.04])
 axSlider2.set_xticks([])
 axSlider2.set_yticks([])
 
@@ -167,12 +174,12 @@ slider2 = Slider(axSlider2, 'r2', 0.0, xSize, valinit=xSize*rad2)
 rad1, rad2 = slider1.val, slider2.val
 
 # Filter angular sliders
-axSlider3 = fig.add_axes([0.45, 0.4, 0.234, 0.04])
+axSlider3 = fig.add_axes([0.41, 0.41, 0.234, 0.04])
 axSlider3.set_xticks([])
 axSlider3.set_yticks([])
 
 #axSlider4 = plt.axes([0.7, 0.05, 0.237, 0.04])
-axSlider4 = fig.add_axes([0.45, 0.35, 0.237, 0.04])
+axSlider4 = fig.add_axes([0.41, 0.35, 0.237, 0.04])
 axSlider4.set_xticks([])
 axSlider4.set_yticks([])
 
@@ -180,48 +187,38 @@ slider3 = Slider(axSlider3, 'snr',  0, 1, valinit=.1)
 slider4 = Slider(axSlider4, 'thresh', -1., 1., valinit=-1.)
 snr, angleThresh = slider3.val, slider4.val
 
+plt.sca(axDiag)
+diagPlot = plt.imshow(K, cmap='gray')
+
+
 # This is loop where all the action happens
 def update():
-    global filtImg, imgPSF, K, psfLog
+    global filtImg, imgPSF, K, KLog, psfLog
     
     # PSF in axPSF
     imgPSF = (distImg < radius)
-    xmask = ma.make_mask(imgPSF)
+#    xmask = ma.make_mask(imgPSF)
     imgPSF = imgPSF.astype(float) 
     psfPlot.set_data(imgPSF)
-      
-    # Fourier masked in axFour
-#    filtImg = fourShft * xmask
-#    filtLog = np.log(np.maximum(np.abs(filtImg),1.))
-#    plt.sca(axFour)
-#    fourPlot.set_data(filtLog)
-    
-#    # Inverse fourier in After
-#    fourIshft = np.fft.ifftshift(filtImg)
-#    fourInv  = np.fft.ifft2(fourIshft)
-#    fourReal = np.real(fourInv)
-#    invPlot.set_data(fourReal)
-    
+          
     #take transform of psf and displaying it 
     fourPSF = np.fft.fft2(imgPSF)
     fourShftPSF = np.fft.fftshift(fourPSF)
     psfLog = np.log(np.maximum(np.abs(fourShftPSF),1.))
-<<<<<<< HEAD
     psfLog = psfLog/complex(psfLog.max())
-    plt.sca(axFour)    
     fourPlot.set_data(psfLog.real)
-=======
-    fourPlot.set_data(psfLog)
->>>>>>> 34025a95a681ba0cf0aea8656857929a09c26084
     
     # Create the Linear MAP filter, K(u,v) 
     isnr=1/snr
     conjfourPSF = np.conj(imgPSF)
     K=np.divide((conjfourPSF + isnr),(conjfourPSF*fourPSF+isnr))
+    KLog = np.log(np.maximum(np.abs(K),1.))
+    KLog = KLog/complex(KLog.max())
+    diagPlot.set_data(KLog.real) #Plotting diag data
+    
     #do the inverse filtering
     fourResult=np.multiply(fourImg, K)#convolution in the fourier domain
     Result=np.fft.ifft2(fourResult)
-
     fourIshft = np.fft.ifftshift(Result)
     fourInv  = np.fft.ifft2(fourIshft)
     fourReal = np.real(fourInv)
@@ -260,9 +257,7 @@ slider3.on_changed(update3)
 slider4.on_changed(update4)
 
 # Show image
-plt.ion()
-
-update()
+#plt.ion()
 
 #plt.sca(axFour)
 plt.show()
