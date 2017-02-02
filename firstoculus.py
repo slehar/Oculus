@@ -131,7 +131,6 @@ filtImg=fourShft * imgPSF
 filtLog = np.log(np.maximum(np.abs(filtImg),1.))
 
 plt.sca(axFour) # Set axFour the "current axes"
-
 fourPlot = plt.imshow(filtLog, cmap='gray',
                       vmin=0.,
                       vmax=1.)
@@ -188,7 +187,7 @@ slider4 = Slider(axSlider4, 'thresh', -1., 1., valinit=-1.)
 snr, angleThresh = slider3.val, slider4.val
 
 plt.sca(axDiag)
-diagPlot = plt.imshow(K, cmap='gray')
+diagPlot = plt.imshow(K, cmap='gray',vmin=0.,vmax=1.)
 
 
 # This is loop where all the action happens
