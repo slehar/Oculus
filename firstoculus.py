@@ -78,6 +78,7 @@ imgNp = np.array(imgPil.convert('L'))/255.
 ySize, xSize = imgNp.shape
 radius = min(ySize,xSize)/4
 hafY, hafX = int(ySize/2), int(xSize/2)
+plt.sca(axBefore)
 imgplot = plt.imshow(imgPil, cmap='gray')
 x,y=hafX,hafY
 sigma=xSize/100.
@@ -121,8 +122,8 @@ plt.sca(axPSF) # Set imgPSF the "current axes"
 psfPlot = plt.imshow(imgPSF, cmap='gray')
 
 
-angleImg = np.arctan2(yy,xx)
-angleImgFlip = np.fliplr(np.flipud(angleImg))
+##angleImg = np.arctan2(yy,xx)
+##angleImgFlip = np.fliplr(np.flipud(angleImg))
 #here we're doing the filtering
 filtImg=fourShft * imgPSF
 #maskImg = (distImg < (rad2 * xSize))
@@ -131,9 +132,9 @@ filtImg=fourShft * imgPSF
 filtLog = np.log(np.maximum(np.abs(filtImg),1.))
 
 plt.sca(axFour) # Set axFour the "current axes"
-fourPlot = plt.imshow(filtLog, cmap='gray',
-                      vmin=0.,
-                      vmax=1.)
+#fourPlot = plt.imshow(filtLog, cmap='gray',
+#                      vmin=0.,
+#                      vmax=1.)
 plt.pause(.001)
 
 # Axes for Inverse After Image
@@ -167,7 +168,7 @@ axSlider2.set_xticks([])
 axSlider2.set_yticks([])
 
 hafRadiusMax = min(ySize,xSize) # Setting upper limit to radius focus blur
-slider1 = Slider(axSlider1, 'radius', 0.0, hafRadiusMax, valinit=hafRadiusMax/2)
+slider1 = Slider(axSlider1, 'radius', 0.0, hafRadiusMax/10, valinit=hafRadiusMax/20)
 
 slider2 = Slider(axSlider2, 'r2', 0.0, xSize, valinit=xSize*rad2)
 rad1, rad2 = slider1.val, slider2.val
@@ -210,16 +211,15 @@ def update():
     # Create the Linear MAP filter, K(u,v) 
     isnr=1/snr
     conjfourPSF = np.conj(imgPSF)
-    K=np.divide((conjfourPSF + isnr),(conjfourPSF*fourPSF+isnr))
+#    K=np.divide((conjfourPSF + isnr),(conjfourPSF*fourPSF+isnr))
+    K=(conjfourPSF + isnr)/(conjfourPSF*fourPSF+isnr)
     KLog = np.log(np.maximum(np.abs(K),1.))
     KLog = KLog/complex(KLog.max())
     diagPlot.set_data(KLog.real) #Plotting diag data
     
     #do the inverse filtering
-    fourResult=np.multiply(fourImg, K)#convolution in the fourier domain
+    fourResult=fourImg*K  #convolution in the fourier domain
     Result=np.fft.ifft2(fourResult)
-#   fourIshft = np.fft.ifftshift(Result)
-#    fourInv  = np.fft.ifft2(fourIshft)
     resultReal = np.real(Result)
     invPlot.set_data(resultReal)
     
