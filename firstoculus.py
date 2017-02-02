@@ -37,7 +37,7 @@ winYSize = 16
 winAspect = winXSize/winYSize
 plt.close('all')
 fig = plt.figure(figsize=(winXSize, winYSize))
-fig.canvas.set_window_title('Fourier Interactive')
+fig.canvas.set_window_title('First Oculus Attempt')
 
 # Keypress 'q' to quit callback function
 def press(event):
@@ -147,6 +147,7 @@ axAfter.set_title('After')
 fourIshft = np.fft.ifftshift(filtImg)
 fourInv   = np.fft.ifft2(fourIshft)
 fourReal  = np.real(fourInv)
+plt.sca(axAfter)
 invPlot = plt.imshow(fourReal, cmap='gray')
 
 # Filter radius sliders
@@ -187,7 +188,6 @@ def update():
     imgPSF = (distImg < radius)
     xmask = ma.make_mask(imgPSF)
     imgPSF = imgPSF.astype(float) 
-    plt.sca(axPSF)
     psfPlot.set_data(imgPSF)
       
     # Fourier masked in axFour
@@ -200,16 +200,19 @@ def update():
 #    fourIshft = np.fft.ifftshift(filtImg)
 #    fourInv  = np.fft.ifft2(fourIshft)
 #    fourReal = np.real(fourInv)
-#    plt.sca(axAfter)
 #    invPlot.set_data(fourReal)
     
     #take transform of psf and displaying it 
     fourPSF = np.fft.fft2(imgPSF)
     fourShftPSF = np.fft.fftshift(fourPSF)
     psfLog = np.log(np.maximum(np.abs(fourShftPSF),1.))
+<<<<<<< HEAD
     psfLog = psfLog/complex(psfLog.max())
     plt.sca(axFour)    
     fourPlot.set_data(psfLog.real)
+=======
+    fourPlot.set_data(psfLog)
+>>>>>>> 34025a95a681ba0cf0aea8656857929a09c26084
     
     # Create the Linear MAP filter, K(u,v) 
     isnr=1/snr
@@ -222,7 +225,6 @@ def update():
     fourIshft = np.fft.ifftshift(Result)
     fourInv  = np.fft.ifft2(fourIshft)
     fourReal = np.real(fourInv)
-    plt.sca(axAfter)
     invPlot.set_data(fourReal)
     
     plt.pause(.001)
