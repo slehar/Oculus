@@ -105,11 +105,10 @@ yy, xx = np.mgrid[-hafY:hafY, -hafX:hafX]
 fourImg  = np.fft.fft2(imgNp)
 fourShft = np.fft.fftshift(fourImg)
 fourLog  = np.log(np.abs(fourShft))
+fourLog = fourLog/complex(fourLog.max())
 
 plt.sca(axFour)
-fourPlot = plt.imshow(fourLog, cmap='gray',
-                      vmin=fourLog.min(),
-                      vmax=fourLog.max())
+fourPlot = plt.imshow(fourLog.real, cmap='gray')
 plt.pause(.001)
 
 #### Fourier Filtering ####
@@ -133,7 +132,9 @@ filtLog = np.log(np.maximum(np.abs(filtImg),1.))
 
 plt.sca(axFour) # Set axFour the "current axes"
 
-fourPlot = plt.imshow(filtLog, cmap='gray')
+fourPlot = plt.imshow(filtLog, cmap='gray',
+                      vmin=0.,
+                      vmax=1.)
 plt.pause(.001)
 
 # Axes for Inverse Fourier Image
@@ -178,9 +179,9 @@ slider3 = Slider(axSlider3, 'snr',  0, 1, valinit=.1)
 slider4 = Slider(axSlider4, 'thresh', -1., 1., valinit=-1.)
 snr, angleThresh = slider3.val, slider4.val
 
-# This is where all the action happens
+# This is loop where all the action happens
 def update():
-    global filtImg, imgPSF, K
+    global filtImg, imgPSF, K, psfLog
     
     # PSF in axPSF
     imgPSF = (distImg < radius)
@@ -206,14 +207,16 @@ def update():
     fourPSF = np.fft.fft2(imgPSF)
     fourShftPSF = np.fft.fftshift(fourPSF)
     psfLog = np.log(np.maximum(np.abs(fourShftPSF),1.))
+    psfLog = psfLog/complex(psfLog.max())
     plt.sca(axFour)    
-    fourPlot.set_data(psfLog)
+    fourPlot.set_data(psfLog.real)
     
-    # Create the Linear MAP filter, K(u,v)   
+    # Create the Linear MAP filter, K(u,v) 
+    isnr=1/snr
     conjfourPSF = np.conj(imgPSF)
-    K=(conjfourPSF + isnr)/(conjfourPSF*fourPSF+isnr)
+    K=np.divide((conjfourPSF + isnr),(conjfourPSF*fourPSF+isnr))
     #do the inverse filtering
-    fourResult=fourImg*K#convolution in the fourier domain
+    fourResult=np.multiply(fourImg, K)#convolution in the fourier domain
     Result=np.fft.ifft2(fourResult)
 
     fourIshft = np.fft.ifftshift(Result)
@@ -256,6 +259,9 @@ slider4.on_changed(update4)
 
 # Show image
 plt.ion()
+
+update()
+
 #plt.sca(axFour)
 plt.show()
 
