@@ -17,10 +17,10 @@ import numpy.ma as ma
 import sys
 
 # Global Variables
-radius = 0.2
+radius = 5.
 rad2=0
-snr = .1
-isnr=1/snr
+snr = 100.
+isnr=1./snr
 slidersLocked = False
 angle = 0.
 angleThresh =  -1.
@@ -39,13 +39,14 @@ plt.close('all')
 fig = plt.figure(figsize=(winXSize, winYSize))
 fig.canvas.set_window_title('First Oculus Attempt')
 
+#%%
 # Keypress 'q' to quit callback function
 def press(event):
     global ptList, data
     sys.stdout.flush()
     if event.key == 'q':
         plt.close()
-
+#%%
 # Connect keypress event to callback function
 fig.canvas.mpl_connect('key_press_event', press)
 
@@ -76,10 +77,13 @@ axBefore.set_title('before')
 imgPil = Image.open(imgFile).convert('LA')
 imgNp = np.array(imgPil.convert('L'))/255.
 ySize, xSize = imgNp.shape
-radius = min(ySize,xSize)/4
+han=np.outer(np.hanning(ySize),np.hanning(xSize))
+imgNp=imgNp*han #apply hanning window
+totalpixels=xSize*ySize
+#radius = min(ySize,xSize)/4
 hafY, hafX = int(ySize/2), int(xSize/2)
 plt.sca(axBefore)
-imgplot = plt.imshow(imgPil, cmap='gray')
+imgplot = plt.imshow(imgNp, cmap='gray')
 x,y=hafX,hafY
 sigma=xSize/100.
 
@@ -168,7 +172,7 @@ axSlider2.set_xticks([])
 axSlider2.set_yticks([])
 
 hafRadiusMax = min(ySize,xSize) # Setting upper limit to radius focus blur
-slider1 = Slider(axSlider1, 'radius', 0.0, hafRadiusMax/10, valinit=hafRadiusMax/20)
+slider1 = Slider(axSlider1, 'radius', 0.0, hafRadiusMax/10, valinit=5.)
 
 slider2 = Slider(axSlider2, 'r2', 0.0, xSize, valinit=xSize*rad2)
 rad1, rad2 = slider1.val, slider2.val
@@ -183,7 +187,7 @@ axSlider4 = fig.add_axes([0.41, 0.35, 0.237, 0.04])
 axSlider4.set_xticks([])
 axSlider4.set_yticks([])
 
-slider3 = Slider(axSlider3, 'snr',  0.0001, 1, valinit=.1)
+slider3 = Slider(axSlider3, 'snr',  1., 1000., valinit=100.)
 slider4 = Slider(axSlider4, 'thresh', -1., 1., valinit=-1.)
 snr, angleThresh = slider3.val, slider4.val
 
@@ -193,7 +197,7 @@ diagPlot = plt.imshow(K, cmap='gray',vmin=0.,vmax=1.)
 
 # This is loop where all the action happens
 def update():
-    global filtImg, imgPSF, K, KLog, psfLog, resultReal
+    global filtImg, imgPSF, K, KLog, psfLog, resultReal, isnr, snr, fourImg, totalpixels
     
     # PSF in axPSF
     imgPSF = (distImg < radius)
@@ -209,21 +213,27 @@ def update():
     fourPlot.set_data(psfLog.real)
     
     # Create the Linear MAP filter, K(u,v) 
-    isnr=1/snr
+    isnr=1./snr
     conjfourPSF = np.conj(imgPSF)
-#    K=(conjfourPSF + isnr)/(conjfourPSF*fourPSF+isnr)
+#    K=(conjfourPSF + isnr)/((conjfourPSF*fourPSF)+isnr)
     K=1/fourShftPSF 
+#    print K[hafY:hafY+10,hafX:hafX+10]
     KLog = np.log(np.maximum(np.abs(K),1.))
-    KLog = KLog/complex(KLog.max())
-    diagPlot.set_data(K.real) #Plotting diag data
+    KLog = KLog/complex(KLog.max()) #normalizing 0 to 1
+    diagPlot.set_data(KLog.real) #Plotting diag data
     
     #do the inverse filtering
-    fourResult=fourImg*K  #convolution in the fourier domain
+
+    fourResult=fourImg*K     #convolution in the fourier domain
     Result=np.fft.ifft2(fourResult)
-    Resultshft=np.fft.fftshift(Result)
+#   Resultshft=np.fft.fftshift(Result)
     resultReal = np.real(Result)
     invPlot.set_data(resultReal)
-    
+      
+    #diagnostic printouts of range of values
+#    print K.max(), fourImg.max(), Result.max()
+#    print K.min(), fourImg.min(), Result.min()
+#    print Result.max(), Result.min()
     plt.pause(.001)
 
 def update1(val):
@@ -260,6 +270,7 @@ slider4.on_changed(update4)
 #plt.ion()
 
 #plt.sca(axFour)
+#update()                    #for debug
 plt.show()
 
 # Pop fig window to top]]
