@@ -77,12 +77,25 @@ axBefore.set_title('before')
 imgPil = Image.open(imgFile).convert('LA')
 imgNp = np.array(imgPil.convert('L'))/255.
 ySize, xSize = imgNp.shape
+
+plt.sca(axBefore)
+beforePlot = plt.imshow(imgNp, cmap='gray',vmin=0.,vmax=1.)
+
+
+# Axes for Diagnostic window
+axDiag = fig.add_axes([.65, .2, .35/winAspect, .35])
+axDiag.axes.set_xticks([])
+axDiag.axes.set_yticks([])
+axDiag.set_title('Diagnostic')
+
+
+
 han=np.outer(np.hanning(ySize),np.hanning(xSize))
-imgNp=imgNp*han #apply hanning window
+imgHan=imgNp*han #apply hanning window
 totalpixels=xSize*ySize
 #radius = min(ySize,xSize)/4
 hafY, hafX = int(ySize/2), int(xSize/2)
-plt.sca(axBefore)
+plt.sca(axDiag)
 imgplot = plt.imshow(imgNp, cmap='gray')
 x,y=hafX,hafY
 sigma=xSize/100.
@@ -141,6 +154,8 @@ plt.sca(axFour) # Set axFour the "current axes"
 #                      vmax=1.)
 plt.pause(.001)
 
+
+
 # Axes for Inverse After Image
 axAfter = fig.add_axes([.35, .6, .35/winAspect, .35])
 axAfter.axes.set_xticks([])
@@ -154,11 +169,6 @@ fourReal  = np.real(fourInv)
 plt.sca(axAfter)
 invPlot = plt.imshow(fourReal, cmap='gray')
 
-# Axes for Diagnostic window
-axDiag = fig.add_axes([.65, .2, .35/winAspect, .35])
-axDiag.axes.set_xticks([])
-axDiag.axes.set_yticks([])
-axDiag.set_title('Diagnostic')
 
 
 # Filter radius sliders
@@ -192,7 +202,7 @@ slider4 = Slider(axSlider4, 'thresh', -1., 1., valinit=-1.)
 snr, angleThresh = slider3.val, slider4.val
 
 plt.sca(axDiag)
-diagPlot = plt.imshow(K, cmap='gray',vmin=0.,vmax=1.)
+diagPlot = plt.imshow(imgHan, cmap='gray',vmin=0.,vmax=1.)
 
 
 # This is loop where all the action happens
