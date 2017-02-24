@@ -46,9 +46,9 @@ def press(event):
     sys.stdout.flush()
     if event.key == 'q':
         plt.close()
-#%%
 # Connect keypress event to callback function
 fig.canvas.mpl_connect('key_press_event', press)
+#%%
 
 # Lock Sliders Checkbox
 rax = plt.axes([0.41, 0.2, 0.237/winAspect, 0.1])
@@ -66,12 +66,15 @@ def func(label):
     plt.draw()
     
 check.on_clicked(func)
+#%%
 
 # Axes for Original Image
 axBefore = fig.add_axes([.05, .6, .35/winAspect, .35])
 axBefore.axes.set_xticks([])
 axBefore.axes.set_yticks([])
 axBefore.set_title('before')
+
+#%%
 
 # Read image and display
 imgPil = Image.open(imgFile).convert('LA')
@@ -81,6 +84,7 @@ ySize, xSize = imgNp.shape
 plt.sca(axBefore)
 beforePlot = plt.imshow(imgNp, cmap='gray',vmin=0.,vmax=1.)
 
+#%%
 
 # Axes for Diagnostic window
 axDiag = fig.add_axes([.65, .2, .35/winAspect, .35])
@@ -88,11 +92,12 @@ axDiag.axes.set_xticks([])
 axDiag.axes.set_yticks([])
 axDiag.set_title('Diagnostic')
 
+#%%
 
-
-han=np.outer(np.hanning(ySize),np.hanning(xSize))
-imgHan=imgNp*han #apply hanning window
-totalpixels=xSize*ySize
+# First Pass Hanning
+han = np.outer(np.hanning(ySize),np.hanning(xSize))
+imgHan = imgNp*han #apply hanning window
+totalpixels = xSize*ySize
 #radius = min(ySize,xSize)/4
 hafY, hafX = int(ySize/2), int(xSize/2)
 plt.sca(axDiag)
@@ -120,7 +125,7 @@ yy, xx = np.mgrid[-hafY:hafY, -hafX:hafX]
 
 
 # Fourier Transform
-fourImg  = np.fft.fft2(imgNp)
+fourImg  = np.fft.fft2(imgHan)
 fourShft = np.fft.fftshift(fourImg)
 fourLog  = np.log(np.abs(fourShft))
 fourLog = fourLog/complex(fourLog.max())
@@ -139,22 +144,8 @@ plt.sca(axPSF) # Set imgPSF the "current axes"
 psfPlot = plt.imshow(imgPSF, cmap='gray')
 
 
-##angleImg = np.arctan2(yy,xx)
-##angleImgFlip = np.fliplr(np.flipud(angleImg))
-#here we're doing the filtering
 filtImg=fourShft * imgPSF
-#maskImg = (distImg < (rad2 * xSize))
-#xmask = ma.make_mask(maskImg)
-#filtImg = fourShft * xmask
 filtLog = np.log(np.maximum(np.abs(filtImg),1.))
-
-plt.sca(axFour) # Set axFour the "current axes"
-#fourPlot = plt.imshow(filtLog, cmap='gray',
-#                      vmin=0.,
-#                      vmax=1.)
-plt.pause(.001)
-
-
 
 # Axes for Inverse After Image
 axAfter = fig.add_axes([.35, .6, .35/winAspect, .35])
@@ -167,7 +158,7 @@ fourIshft = np.fft.ifftshift(filtImg)
 fourInv   = np.fft.ifft2(fourIshft)
 fourReal  = np.real(fourInv)
 plt.sca(axAfter)
-invPlot = plt.imshow(fourReal, cmap='gray')
+invPlot = plt.imshow(fourReal, cmap='gray', vmin=0, vmax=1)
 
 
 
@@ -177,7 +168,7 @@ axSlider1.set_xticks([])
 axSlider1.set_yticks([])
 
 #axSlider2 = plt.axes([0.3, 0.05, 0.237, 0.04])
-axSlider2 = fig.add_axes([0.41, 0.4535, 0.237, 0.04])
+axSlider2 = fig.add_axes([0.41, 0.4535, 0.234, 0.04])
 axSlider2.set_xticks([])
 axSlider2.set_yticks([])
 
@@ -193,7 +184,7 @@ axSlider3.set_xticks([])
 axSlider3.set_yticks([])
 
 #axSlider4 = plt.axes([0.7, 0.05, 0.237, 0.04])
-axSlider4 = fig.add_axes([0.41, 0.35, 0.237, 0.04])
+axSlider4 = fig.add_axes([0.41, 0.35, 0.234, 0.04])
 axSlider4.set_xticks([])
 axSlider4.set_yticks([])
 
@@ -207,7 +198,7 @@ diagPlot = plt.imshow(imgHan, cmap='gray',vmin=0.,vmax=1.)
 
 # This is loop where all the action happens
 def update():
-    global filtImg, imgPSF, K, KLog, psfLog, resultReal, isnr, snr, fourImg, totalpixels
+    global filtImg, imgPSF, K, KLog, psfLog, resultReal, isnr, snr, fourImg, totalpixels, imgNp, fourReal
     
     # PSF in axPSF
     imgPSF = (distImg < radius)
@@ -221,29 +212,39 @@ def update():
     psfLog = np.log(np.maximum(np.abs(fourShftPSF),1.))
     psfLog = psfLog/complex(psfLog.max())
     fourPlot.set_data(psfLog.real)
+      
     
     # Create the Linear MAP filter, K(u,v) 
     isnr=1./snr
-    conjfourPSF = np.conj(imgPSF)
-#    K=(conjfourPSF + isnr)/((conjfourPSF*fourPSF)+isnr)
-    K=1/fourShftPSF 
-#    print K[hafY:hafY+10,hafX:hafX+10]
+    #-------
+    conjfourPSF = np.conj(fourPSF)
+    K=(conjfourPSF + isnr)/((conjfourPSF*fourPSF)+isnr)
+#    print K[hafY:hafY+1,hafX:hafX+1]    #is this the d.c. term?
     KLog = np.log(np.maximum(np.abs(K),1.))
     KLog = KLog/complex(KLog.max()) #normalizing 0 to 1
     diagPlot.set_data(KLog.real) #Plotting diag data
-    
-    #do the inverse filtering
+    norm = np.sum(K)    #for normalizing K
 
-    fourResult=fourImg*K     #convolution in the fourier domain
-    Result=np.fft.ifft2(fourResult)
-#   Resultshft=np.fft.fftshift(Result)
-    resultReal = np.real(Result)
-    invPlot.set_data(resultReal)
-      
-    #diagnostic printouts of range of values
-#    print K.max(), fourImg.max(), Result.max()
-#    print K.min(), fourImg.min(), Result.min()
-#    print Result.max(), Result.min()
+    #do the inverse filtering
+    fourResult=fourShft*K    #convolution in the fourier domain
+    span=fourResult.max()-fourResult.min()
+    
+    # Inverse Fourier Transform
+    fourIshft = np.fft.ifftshift(fourResult)
+    fourInv   = np.fft.ifft2(fourIshft)
+
+    
+    range=fourInv.max()-fourInv.min()
+    print range
+
+#   make sure fourReal scales 0.to 1.0 for display
+    fourInv=np.fft.ifftshift(fourInv)
+    fourReal  = np.real(fourInv)/np.real(range)
+    
+
+    plt.sca(axAfter)
+    invPlot = plt.imshow(fourReal, cmap='gray')
+
     plt.pause(.001)
 
 def update1(val):
