@@ -227,20 +227,23 @@ def update():
 
     #do the inverse filtering
     fourResult=fourShft*K    #convolution in the fourier domain
-    span=fourResult.max()-fourResult.min()
     
     # Inverse Fourier Transform
     fourIshft = np.fft.ifftshift(fourResult)
     fourInv   = np.fft.ifft2(fourIshft)
 
-    
-    range=fourInv.max()-fourInv.min()
-    print range
 
+    
 #   make sure fourReal scales 0.to 1.0 for display
     fourInv=np.fft.ifftshift(fourInv)
-    fourReal  = np.real(fourInv)/np.real(range)
+    fourReal  = np.real(fourInv)
+
+    lmax=fourReal.max()
+    lmin=fourReal.min()
+
     
+    fourReal=(fourReal-lmin)+fourReal/(lmax-lmin)
+ 
 
     plt.sca(axAfter)
     invPlot = plt.imshow(fourReal, cmap='gray')
