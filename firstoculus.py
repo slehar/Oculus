@@ -32,8 +32,8 @@ angleThresh =  -1.
 #    initialfile = 'Rover.png')
 imgFile = 'blr.png'
 # Open figure window
-winXSize = 16
-winYSize = 16
+winXSize = 18
+winYSize = 14
 winAspect = winXSize/winYSize
 plt.close('all')
 fig = plt.figure(figsize=(winXSize, winYSize))
@@ -128,7 +128,7 @@ yy, xx = np.mgrid[-hafY:hafY, -hafX:hafX]
 
 # Fourier Transform
 fourImg  = np.fft.fft2(imgHan) #set dc term to 1 to control contrast
-fourImg[1,1] = 1.0+0j
+fourImg[0,0] = 1.0+0j
 print 'DC term is', fourImg[1:2,1:2]
 fourShft = np.fft.fftshift(fourImg)
 fourLog  = np.log(np.abs(fourShft))
@@ -234,6 +234,8 @@ def update():
     
     # Inverse Fourier Transform
     fourIshft = np.fft.ifftshift(fourResult)
+    fourIshft[0,0] = 1.0+0.0j #set d.c. term for display
+
     fourInv   = np.fft.ifft2(fourIshft)
 
 
@@ -245,8 +247,6 @@ def update():
     lmax=fourReal.max()
     lmin=fourReal.min()
 
-    
-    fourReal=(fourReal-lmin)+fourReal/(lmax-lmin)
  
 
     plt.sca(axAfter)
