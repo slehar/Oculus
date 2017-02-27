@@ -23,8 +23,10 @@ rad2=0
 snr = 100.
 isnr=1./snr
 slidersLocked = False
-psfMode = 'circle'
-lineOri = 0.
+#psfMode = 'circle'
+psfMode = 'line'
+lineOri = np.pi/4.
+lineLength = 100.
 angle = 0.
 angleThresh =  -1.
 
@@ -152,16 +154,10 @@ elif psfMode == 'line':
     imgPSF = np.zeros([2*hafY, 2*hafX])
     pilPSF = Image.fromarray(imgPSF, 'L')
     draw = ImageDraw.Draw(pilPSF)
-    lineRad = float((hafX+hafY)/2.)
-#    draw.line(((lineRad * -np.cos(lineOri)+ hafX, lineRad * -np.sin(lineOri)+ hafY),
-#              (lineRad *  np.cos(lineOri)+ hafX, lineRad *  np.sin(lineOri)+ hafY)), fill=128)
-#    print lineRad * -np.cos(lineOri) + hafX
-#    print lineRad * -np.sin(lineOri) + hafY
-#    print lineRad *  np.cos(lineOri) + hafX
-#    print lineRad *  np.sin(lineOri) + hafY
-#    print
-    draw.line((0.,0., 100.,100.), fill=128)
-    imgPSF = np.asarray(pilPSF)
+    draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
+                lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
+               fill=128, width=20)
+    imgPSF = np.asarray(pilPSF)/255.
     
 imgPSF = imgPSF.astype(float) 
 plt.sca(axPSF) # Set imgPSF the "current axes"
@@ -228,8 +224,17 @@ def update():
     global filtImg, imgPSF, K, KLog, psfLog, resultReal, isnr, snr, fourImg, totalpixels, imgNp, fourReal
     
     # PSF in axPSF
-    imgPSF = (distImg < radius)
-#    xmask = ma.make_mask(imgPSF)
+    if psfMode == 'circle':
+        imgPSF = (distImg < radius)# This is a circle PSF
+    elif psfMode == 'line':
+        imgPSF = np.zeros([2*hafY, 2*hafX])
+        pilPSF = Image.fromarray(imgPSF, 'L')
+        draw = ImageDraw.Draw(pilPSF)
+        draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
+                    lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
+                   fill=128, width=20)
+        imgPSF = np.asarray(pilPSF)/255.
+    
     realimgPSF = imgPSF.astype(float) 
     psfPlot.set_data(realimgPSF)
           
