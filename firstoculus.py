@@ -180,7 +180,9 @@ hafRadiusMax = min(ySize,xSize) # Setting upper limit to radius focus blur
 slider1 = Slider(axSlider1, 'radius', 0.5, hafRadiusMax/10, valinit=5.)
 
 slider2 = Slider(axSlider2, 'r2', 0.0, xSize, valinit=xSize*rad2)
-rad1, rad2 = slider1.val, slider2.val
+rad1 = np.log(slider1.val)      #make log control
+slider1.valtext.set_text(rad1)
+rad2 = slider2.val
 
 # Filter angular sliders
 axSlider3 = fig.add_axes([0.41, 0.40, 0.234, 0.04])
