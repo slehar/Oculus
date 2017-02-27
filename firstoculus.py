@@ -26,11 +26,10 @@ angle = 0.
 angleThresh =  -1.
 
 # Get image using finder dialog
-#root = Tkinter.Tk()
-#root.withdraw() # Hide the root window
-#imgFile = tkFileDialog.askopenfilename(
-#    initialfile = 'Rover.png')
-imgFile = 'blr.png'
+root = Tkinter.Tk()
+root.withdraw() # Hide the root window
+imgFile = tkFileDialog.askopenfilename(initialfile = 'blr.png')
+#imgFile = 'blr.png'
 # Open figure window
 winXSize = 18
 winYSize = 14
