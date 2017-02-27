@@ -43,7 +43,7 @@ plt.close('all')
 fig = plt.figure(figsize=(winXSize, winYSize))
 fig.canvas.set_window_title('First Oculus Attempt')
 
-#%%
+
 # Keypress 'q' to quit callback function
 def press(event):
     global ptList, data
@@ -52,7 +52,7 @@ def press(event):
         plt.close()
 # Connect keypress event to callback function
 fig.canvas.mpl_connect('key_press_event', press)
-#%%
+
 
 # 
 # Disc / Line Checkbox
@@ -72,26 +72,22 @@ def modefunc(label):
     plt.draw()
     
 radio.on_clicked(modefunc)
-#%%
 
-# Axes for Original Image
+
+# Axes for Before Image
 axBefore = fig.add_axes([.05, .6, .35/winAspect, .35])
 axBefore.axes.set_xticks([])
 axBefore.axes.set_yticks([])
 axBefore.set_title('before')
 
-#%%
-
 # Read image and display
 imgPil = Image.open(imgFile).convert('LA') #LA = 'luminance + alpha
 imgNp = np.array(imgPil.convert('L'))/255. # convert to L, luminance only
 ySize, xSize = imgNp.shape
-print 'input image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
-
+hafY, hafX = int(ySize/2), int(xSize/2)
+#print 'input image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
 plt.sca(axBefore)
 beforePlot = plt.imshow(imgNp, cmap='gray',vmin=0.,vmax=1.)
-
-#%%
 
 # Axes for Diagnostic window
 axDiag = fig.add_axes([.65, .2, .35/winAspect, .35])
@@ -99,15 +95,12 @@ axDiag.axes.set_xticks([])
 axDiag.axes.set_yticks([])
 axDiag.set_title('Diagnostic')
 
-#%%
-
 # First Pass Hanning
 han = np.outer(np.hanning(ySize),np.hanning(xSize))
 imgHan = imgNp*han #apply hanning window
 totalpixels = xSize*ySize
-print 'total pixels = ', totalpixels
+#print 'total pixels = ', totalpixels
 #radius = min(ySize,xSize)/4
-hafY, hafX = int(ySize/2), int(xSize/2)
 plt.sca(axDiag)
 imgplot = plt.imshow(imgNp, cmap='gray')
 x,y=hafX,hafY
@@ -165,8 +158,6 @@ imgPSF = imgPSF.astype(float)
 plt.sca(axPSF) # Set imgPSF the "current axes"
 psfPlot = plt.imshow(imgPSF, cmap='gray')
     
-
-
 filtImg=fourShft * imgPSF
 filtLog = np.log(np.maximum(np.abs(filtImg),1.))
 
@@ -182,8 +173,6 @@ fourInv   = np.fft.ifft2(fourIshft)
 fourReal  = np.real(fourInv)
 plt.sca(axAfter)
 invPlot = plt.imshow(fourReal, cmap='gray', vmin=0, vmax=1)
-
-
 
 # Filter radius sliders
 axSlider1 = fig.add_axes([0.41, 0.5, 0.234, 0.04])
@@ -220,7 +209,7 @@ snr, angleThresh = slider3.val, slider4.val
 plt.sca(axDiag)
 diagPlot = plt.imshow(imgHan, cmap='gray',vmin=0.,vmax=1.)
 
-
+#%%
 # This is loop where all the action happens
 def update():
     global filtImg, imgPSF, K, KLog, psfLog, resultReal, isnr, snr, fourImg, totalpixels, imgNp, fourReal
@@ -284,6 +273,7 @@ def update():
 
     plt.pause(.001)
 
+#%%
 def update1(val):
     global radius
     radius = slider1.val
