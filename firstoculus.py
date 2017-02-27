@@ -30,7 +30,7 @@ angleThresh =  -1.
 #root.withdraw() # Hide the root window
 #imgFile = tkFileDialog.askopenfilename(
 #    initialfile = 'Rover.png')
-imgFile = 'Rover.png'
+imgFile = 'blr.png'
 # Open figure window
 winXSize = 16
 winYSize = 16
@@ -80,6 +80,7 @@ axBefore.set_title('before')
 imgPil = Image.open(imgFile).convert('LA')
 imgNp = np.array(imgPil.convert('L'))/255.
 ySize, xSize = imgNp.shape
+print 'input image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
 
 plt.sca(axBefore)
 beforePlot = plt.imshow(imgNp, cmap='gray',vmin=0.,vmax=1.)
@@ -98,12 +99,13 @@ axDiag.set_title('Diagnostic')
 han = np.outer(np.hanning(ySize),np.hanning(xSize))
 imgHan = imgNp*han #apply hanning window
 totalpixels = xSize*ySize
+print 'total pixels = ', totalpixels
 #radius = min(ySize,xSize)/4
 hafY, hafX = int(ySize/2), int(xSize/2)
 plt.sca(axDiag)
 imgplot = plt.imshow(imgNp, cmap='gray')
 x,y=hafX,hafY
-sigma=xSize/100.
+#sigma=xSize/100.
 
 K=np.zeros(imgNp.shape)#array for inverse filter
 
@@ -125,7 +127,9 @@ yy, xx = np.mgrid[-hafY:hafY, -hafX:hafX]
 
 
 # Fourier Transform
-fourImg  = np.fft.fft2(imgHan)
+fourImg  = np.fft.fft2(imgHan) #set dc term to 1 to control contrast
+fourImg[1,1] = 1.0+0j
+print 'DC term is', fourImg[1:2,1:2]
 fourShft = np.fft.fftshift(fourImg)
 fourLog  = np.log(np.abs(fourShft))
 fourLog = fourLog/complex(fourLog.max())
@@ -168,18 +172,18 @@ axSlider1.set_xticks([])
 axSlider1.set_yticks([])
 
 #axSlider2 = plt.axes([0.3, 0.05, 0.237, 0.04])
-axSlider2 = fig.add_axes([0.41, 0.4535, 0.234, 0.04])
+axSlider2 = fig.add_axes([0.41, 0.4509, 0.234, 0.04])
 axSlider2.set_xticks([])
 axSlider2.set_yticks([])
 
 hafRadiusMax = min(ySize,xSize) # Setting upper limit to radius focus blur
-slider1 = Slider(axSlider1, 'radius', 0.0, hafRadiusMax/10, valinit=5.)
+slider1 = Slider(axSlider1, 'radius', 0.5, hafRadiusMax/10, valinit=5.)
 
 slider2 = Slider(axSlider2, 'r2', 0.0, xSize, valinit=xSize*rad2)
 rad1, rad2 = slider1.val, slider2.val
 
 # Filter angular sliders
-axSlider3 = fig.add_axes([0.41, 0.41, 0.234, 0.04])
+axSlider3 = fig.add_axes([0.41, 0.40, 0.234, 0.04])
 axSlider3.set_xticks([])
 axSlider3.set_yticks([])
 
