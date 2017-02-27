@@ -10,7 +10,7 @@ Created on Wed Sep 28 16:36:45 2016
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches #for drawing lines, rectangles
 from   matplotlib.widgets import Slider
-from   matplotlib.widgets import CheckButtons
+from   matplotlib.widgets import RadioButtons
 from   PIL import Image, ImageDraw 
 import Tkinter, tkFileDialog
 import numpy as np
@@ -24,7 +24,7 @@ snr = 100.
 isnr=1./snr
 slidersLocked = False
 #psfMode = 'circle'
-psfMode = 'line'
+psfMode = 'Line'
 lineOri = np.pi/4.
 lineLength = 100.
 angle = 0.
@@ -54,22 +54,24 @@ def press(event):
 fig.canvas.mpl_connect('key_press_event', press)
 #%%
 
-# Lock Sliders Checkbox
+# 
+# Disc / Line Checkbox
 rax = plt.axes([0.41, 0.2, 0.237/winAspect, 0.1])
-check = CheckButtons(rax, ['Disc', 'Line'], [False,True])
+radio = RadioButtons(rax, ['Disc', 'Line'])
 
-def func(label):
-    global slidersLocked
+def modefunc(label):
+    global psfMode
     
     if   label == 'Disc':
-        pass
+        psfMode = 'Disc'
 #        slidersLocked = check.lines[0][0].get_visible()
     if   label == 'Line':
-        pass
+        psfMode = 'Line'
 #        slidersLocked = check.lines[0][0].get_visible()
+    plt.pause(.001)
     plt.draw()
     
-check.on_clicked(func)
+radio.on_clicked(modefunc)
 #%%
 
 # Axes for Original Image
