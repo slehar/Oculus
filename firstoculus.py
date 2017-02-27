@@ -8,9 +8,10 @@ Created on Wed Sep 28 16:36:45 2016
 """
 
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches #for drawing lines, rectangles
 from   matplotlib.widgets import Slider
 from   matplotlib.widgets import CheckButtons
-from   PIL import Image
+from   PIL import Image, ImageDraw 
 import Tkinter, tkFileDialog
 import numpy as np
 import numpy.ma as ma
@@ -22,6 +23,8 @@ rad2=0
 snr = 100.
 isnr=1./snr
 slidersLocked = False
+psfMode = 'circle'
+lineOri = 0.
 angle = 0.
 angleThresh =  -1.
 
@@ -76,8 +79,8 @@ axBefore.set_title('before')
 #%%
 
 # Read image and display
-imgPil = Image.open(imgFile).convert('LA')
-imgNp = np.array(imgPil.convert('L'))/255.
+imgPil = Image.open(imgFile).convert('LA') #LA = 'luminance + alpha
+imgNp = np.array(imgPil.convert('L'))/255. # convert to L, luminance only
 ySize, xSize = imgNp.shape
 print 'input image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
 
@@ -141,10 +144,29 @@ plt.pause(.001)
 distImg = np.sqrt(xx**2 + yy**2)
 
 # Generate PSF Image
-imgPSF = (distImg < radius)# This is a circle PSF
+psfMode = 'line'
+if psfMode == 'circle':
+    imgPSF = (distImg < radius)# This is a circle PSF
+elif psfMode == 'line':
+    
+    imgPSF = np.zeros([2*hafY, 2*hafX])
+    pilPSF = Image.fromarray(imgPSF, 'L')
+    draw = ImageDraw.Draw(pilPSF)
+    lineRad = float((hafX+hafY)/2.)
+#    draw.line(((lineRad * -np.cos(lineOri)+ hafX, lineRad * -np.sin(lineOri)+ hafY),
+#              (lineRad *  np.cos(lineOri)+ hafX, lineRad *  np.sin(lineOri)+ hafY)), fill=128)
+#    print lineRad * -np.cos(lineOri) + hafX
+#    print lineRad * -np.sin(lineOri) + hafY
+#    print lineRad *  np.cos(lineOri) + hafX
+#    print lineRad *  np.sin(lineOri) + hafY
+#    print
+    draw.line((0.,0., 100.,100.), fill=128)
+    imgPSF = np.asarray(pilPSF)
+    
 imgPSF = imgPSF.astype(float) 
 plt.sca(axPSF) # Set imgPSF the "current axes"
 psfPlot = plt.imshow(imgPSF, cmap='gray')
+    
 
 
 filtImg=fourShft * imgPSF
