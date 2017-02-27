@@ -56,7 +56,7 @@ fig.canvas.mpl_connect('key_press_event', press)
 
 # 
 # Disc / Line Checkbox
-rax = plt.axes([0.41, 0.2, 0.237/winAspect, 0.1])
+rax = plt.axes([0.41, 0.2, 0.06/winAspect, 0.1])
 radio = RadioButtons(rax, ['Disc', 'Line'])
 
 def modefunc(label):
