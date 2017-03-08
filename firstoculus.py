@@ -23,8 +23,8 @@ rad2=0
 snr = 100.
 isnr=1./snr
 slidersLocked = False
-#psfMode = 'circle'
-psfMode = 'Line'
+psfMode = 'Disc'
+#psfMode = 'Line'
 lineOri = np.pi/4.
 lineLength = 100.
 angle = 0.
@@ -58,20 +58,6 @@ fig.canvas.mpl_connect('key_press_event', press)
 # Disc / Line Checkbox
 rax = plt.axes([0.41, 0.2, 0.06/winAspect, 0.1])
 radio = RadioButtons(rax, ['Disc', 'Line'])
-
-def modefunc(label):
-    global psfMode
-    
-    if   label == 'Disc':
-        psfMode = 'Disc'
-#        slidersLocked = check.lines[0][0].get_visible()
-    if   label == 'Line':
-        psfMode = 'Line'
-#        slidersLocked = check.lines[0][0].get_visible()
-    plt.pause(.001)
-    plt.draw()
-    
-radio.on_clicked(modefunc)
 
 
 # Axes for Before Image
@@ -141,15 +127,15 @@ plt.pause(.001)
 distImg = np.sqrt(xx**2 + yy**2)
 
 # Generate PSF Image
-psfMode = 'line'
-if psfMode == 'circle':
-    imgPSF = (distImg < radius)# This is a circle PSF
+#psfMode = 'Line'
+if psfMode == 'Disc':
+    imgPSF = (distImg < radius)# This is a Disc PSF
 elif psfMode == 'line':
     
     imgPSF = np.zeros([2*hafY, 2*hafX])
     pilPSF = Image.fromarray(imgPSF, 'L')
     draw = ImageDraw.Draw(pilPSF)
-    draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
+    draw.Line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
                 lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
                fill=128, width=20)
     imgPSF = np.asarray(pilPSF)/255.
@@ -160,6 +146,29 @@ psfPlot = plt.imshow(imgPSF, cmap='gray')
     
 filtImg=fourShft * imgPSF
 filtLog = np.log(np.maximum(np.abs(filtImg),1.))
+
+
+def modefunc(label):
+    global psfMode
+    
+    if   label == 'Disc':
+        psfMode = 'Disc'
+        imgPSF = (distImg < radius)# This is a Disc PSF
+    if   label == 'Line':
+        psfMode = 'Line'
+        imgPSF = np.zeros([2*hafY, 2*hafX])
+        pilPSF = Image.fromarray(imgPSF, 'L')
+        draw = ImageDraw.Draw(pilPSF)
+        draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
+                    lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
+                   fill=128, width=20)
+        imgPSF = np.asarray(pilPSF)/255.
+        
+    imgPSF = imgPSF.astype(float) 
+    plt.pause(.001)
+    plt.draw()
+    
+radio.on_clicked(modefunc)
 
 # Axes for Inverse After Image
 axAfter = fig.add_axes([.35, .6, .35/winAspect, .35])
@@ -215,9 +224,9 @@ def update():
     global filtImg, imgPSF, K, KLog, psfLog, resultReal, isnr, snr, fourImg, totalpixels, imgNp, fourReal
     
     # PSF in axPSF
-    if psfMode == 'circle':
-        imgPSF = (distImg < radius)# This is a circle PSF
-    elif psfMode == 'line':
+    if psfMode == 'Disc':
+        imgPSF = (distImg < radius)# This is a Disc PSF
+    elif psfMode == 'Line':
         imgPSF = np.zeros([2*hafY, 2*hafX])
         pilPSF = Image.fromarray(imgPSF, 'L')
         draw = ImageDraw.Draw(pilPSF)
