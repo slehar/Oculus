@@ -108,7 +108,6 @@ axPSF.set_title('PSF')
 
 yy, xx = np.mgrid[-hafY:hafY, -hafX:hafX]
 
-
 # Fourier Transform
 fourImg  = np.fft.fft2(imgHan) #set dc term to 1 to control contrast
 fourImg[0,0] = 1.0+0j
@@ -129,7 +128,7 @@ distImg = np.sqrt(xx**2 + yy**2)
 if psfMode == 'Disc':
     imgPSF = (distImg < radius)# This is a Disc PSF
 elif psfMode == 'line':
-    
+    lineLength = radius*2.
     imgPSF = np.zeros([2*hafY, 2*hafX])
     pilPSF = Image.fromarray(imgPSF, 'L')
     draw = ImageDraw.Draw(pilPSF)
@@ -203,6 +202,7 @@ def update():
     if psfMode == 'Disc':
         imgPSF = (distImg < radius)# This is a Disc PSF
     elif psfMode == 'Line':
+        lineLength = radius*2.
         imgPSF = np.zeros([2*hafY, 2*hafX])
         pilPSF = Image.fromarray(imgPSF, 'L')
         draw = ImageDraw.Draw(pilPSF)
@@ -267,12 +267,13 @@ def modefunc(label):
         imgPSF = (distImg < radius)# This is a Disc PSF
     if   label == 'Line':
         psfMode = 'Line'
+        lineLength = radius * 2
         imgPSF = np.zeros([2*hafY, 2*hafX])
         pilPSF = Image.fromarray(imgPSF, 'L')
         draw = ImageDraw.Draw(pilPSF)
         draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
                     lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
-                   fill=128, width=20)
+                   fill=128, width=10)
         imgPSF = np.asarray(pilPSF)/255.
         
     imgPSF = imgPSF.astype(float) 
