@@ -148,28 +148,6 @@ filtImg=fourShft * imgPSF
 filtLog = np.log(np.maximum(np.abs(filtImg),1.))
 
 
-def modefunc(label):
-    global psfMode
-    
-    if   label == 'Disc':
-        psfMode = 'Disc'
-        imgPSF = (distImg < radius)# This is a Disc PSF
-    if   label == 'Line':
-        psfMode = 'Line'
-        imgPSF = np.zeros([2*hafY, 2*hafX])
-        pilPSF = Image.fromarray(imgPSF, 'L')
-        draw = ImageDraw.Draw(pilPSF)
-        draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
-                    lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
-                   fill=128, width=20)
-        imgPSF = np.asarray(pilPSF)/255.
-        
-    imgPSF = imgPSF.astype(float) 
-    plt.pause(.001)
-    plt.draw()
-    
-radio.on_clicked(modefunc)
-
 # Axes for Inverse After Image
 axAfter = fig.add_axes([.35, .6, .35/winAspect, .35])
 axAfter.axes.set_xticks([])
@@ -281,6 +259,29 @@ def update():
     invPlot = plt.imshow(fourReal, cmap='gray')
 
     plt.pause(.001)
+
+# radio button callback function to switch PSF mode
+def modefunc(label):
+    global psfMode
+    
+    if   label == 'Disc':
+        psfMode = 'Disc'
+        imgPSF = (distImg < radius)# This is a Disc PSF
+    if   label == 'Line':
+        psfMode = 'Line'
+        imgPSF = np.zeros([2*hafY, 2*hafX])
+        pilPSF = Image.fromarray(imgPSF, 'L')
+        draw = ImageDraw.Draw(pilPSF)
+        draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
+                    lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
+                   fill=128, width=20)
+        imgPSF = np.asarray(pilPSF)/255.
+        
+    imgPSF = imgPSF.astype(float) 
+    plt.pause(.001)
+    update()
+    plt.draw()    
+radio.on_clicked(modefunc)
 
 #%%
 def update1(val):
