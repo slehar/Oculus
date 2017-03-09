@@ -134,7 +134,7 @@ elif psfMode == 'line':
     draw = ImageDraw.Draw(pilPSF)
     draw.Line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
                 lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
-               fill=128, width=20)
+               fill=255, width=20)
     imgPSF = np.asarray(pilPSF)/255.
     
 imgPSF = imgPSF.astype(float) 
@@ -208,7 +208,7 @@ def update():
         draw = ImageDraw.Draw(pilPSF)
         draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
                     lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
-                   fill=128, width=20)
+                   fill=255, width=20)
         imgPSF = np.asarray(pilPSF)/255.
     
     realimgPSF = imgPSF.astype(float) 
@@ -273,7 +273,7 @@ def modefunc(label):
         draw = ImageDraw.Draw(pilPSF)
         draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
                     lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
-                   fill=128, width=10)
+                   fill=255, width=10)
         imgPSF = np.asarray(pilPSF)/255.
         
     imgPSF = imgPSF.astype(float) 
