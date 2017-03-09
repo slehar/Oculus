@@ -128,13 +128,13 @@ distImg = np.sqrt(xx**2 + yy**2)
 if psfMode == 'Disc':
     imgPSF = (distImg < radius)# This is a Disc PSF
 elif psfMode == 'line':
-    lineLength = radius*2.
+    lineLength = radius*3.
     imgPSF = np.zeros([2*hafY, 2*hafX])
     pilPSF = Image.fromarray(imgPSF, 'L')
     draw = ImageDraw.Draw(pilPSF)
     draw.Line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
                 lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
-               fill=255, width=20)
+               fill=255, width=5)
     imgPSF = np.asarray(pilPSF)/255.
     
 imgPSF = imgPSF.astype(float) 
@@ -202,13 +202,13 @@ def update():
     if psfMode == 'Disc':
         imgPSF = (distImg < radius)# This is a Disc PSF
     elif psfMode == 'Line':
-        lineLength = radius*2.
+        lineLength = radius*3.
         imgPSF = np.zeros([2*hafY, 2*hafX])
         pilPSF = Image.fromarray(imgPSF, 'L')
         draw = ImageDraw.Draw(pilPSF)
         draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
                     lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
-                   fill=255, width=20)
+                   fill=255, width=5)
         imgPSF = np.asarray(pilPSF)/255.
     
     realimgPSF = imgPSF.astype(float) 
@@ -267,13 +267,13 @@ def modefunc(label):
         imgPSF = (distImg < radius)# This is a Disc PSF
     if   label == 'Line':
         psfMode = 'Line'
-        lineLength = radius * 2
+        lineLength = radius * 3
         imgPSF = np.zeros([2*hafY, 2*hafX])
         pilPSF = Image.fromarray(imgPSF, 'L')
         draw = ImageDraw.Draw(pilPSF)
         draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
                     lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
-                   fill=255, width=10)
+                   fill=255, width=5)
         imgPSF = np.asarray(pilPSF)/255.
         
     imgPSF = imgPSF.astype(float) 
