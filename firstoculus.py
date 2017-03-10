@@ -27,6 +27,7 @@ psfMode = 'Disc'
 #psfMode = 'Line'
 lineOri = 0.
 lineLength = 100.
+lineWidth = 5
 
 # Get image using finder dialog
 root = Tkinter.Tk()
@@ -155,7 +156,7 @@ elif psfMode == 'line':
     draw = ImageDraw.Draw(pilPSF)
     draw.Line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
                 lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
-               fill=255, width=5)
+               fill=255, width=lineWidth)
     imgPSF = np.asarray(pilPSF)/255.
     
 imgPSF = imgPSF.astype(float) 
@@ -208,7 +209,7 @@ axSlider4.set_xticks([])
 axSlider4.set_yticks([])
 
 slider3 = Slider(axSlider3, 'snr',  1., 1000., valinit=100.)
-slider4 = Slider(axSlider4, 'thresh', -1., 1., valinit=-1.)
+slider4 = Slider(axSlider4, 'linewidth', 1, 50, valinit=5.)
 snr, angleThresh = slider3.val, slider4.val
 
 plt.sca(axDiag)
@@ -229,7 +230,7 @@ def update():
         draw = ImageDraw.Draw(pilPSF)
         draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
                     lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
-                   fill=255, width=5)
+                   fill=255, width=lineWidth)
         imgPSF = np.asarray(pilPSF)/255.
     
     realimgPSF = imgPSF.astype(float) 
@@ -294,7 +295,7 @@ def modefunc(label):
         draw = ImageDraw.Draw(pilPSF)
         draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
                     lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
-                   fill=255, width=5)
+                   fill=255, width=lineWidth)
         imgPSF = np.asarray(pilPSF)/255.
         
     imgPSF = imgPSF.astype(float) 
@@ -321,8 +322,8 @@ def update3(val):
     update()
 
 def update4(val):
-    global angleThresh
-    angleThresh = slider4.val
+    global lineWidth
+    lineWidth = int(slider4.val)
     update()
 
 #    fig.canvas.draw()
