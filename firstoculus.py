@@ -68,6 +68,27 @@ axBefore.set_title('before')
 imgPil = Image.open(imgFile).convert('LA') #LA = 'luminance + alpha
 imgNp = np.array(imgPil.convert('L'))/255. # convert to L, luminance only
 ySize, xSize = imgNp.shape
+
+print 'original image size', xSize, ySize
+#here we might like to resize the array if it is not even, by cutting out
+# a line on any odd-dimension.   
+if ySize % 2 == 0:
+    print 'y dimension is even'
+else:
+    print 'y dimension is odd, so drop a row'
+    ySize = ySize-1
+    imgNp = imgNp[0:ySize]
+    
+if xSize % 2 == 0:
+    print 'x dimension is even'
+else:
+    print 'x dimension is odd, so drop a column'
+    xSize = xSize-1
+    imgNp=imgNp[:, :xSize]
+    
+
+print 'input image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
+
 hafY, hafX = int(ySize/2), int(xSize/2)
 #print 'input image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
 plt.sca(axBefore)
