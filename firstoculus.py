@@ -209,8 +209,8 @@ axSlider4.set_xticks([])
 axSlider4.set_yticks([])
 
 slider3 = Slider(axSlider3, 'snr',  1., 1000., valinit=100.)
-slider4 = Slider(axSlider4, 'linewidth', 1, 50, valinit=5.)
-snr, angleThresh = slider3.val, slider4.val
+slider4 = Slider(axSlider4, 'linewidth', 1, 50, valinit=5, valfmt='%d')
+snr, lineWidth = slider3.val, slider4.val
 
 plt.sca(axDiag)
 diagPlot = plt.imshow(imgHan, cmap='gray',vmin=0.,vmax=1.)
@@ -287,18 +287,22 @@ def modefunc(label):
     if   label == 'Disc':
         psfMode = 'Disc'
         imgPSF = (distImg < radius)# This is a Disc PSF
+        slider1.label = 'radius'
     if   label == 'Line':
         psfMode = 'Line'
         lineLength = radius * 3
         imgPSF = np.zeros([2*hafY, 2*hafX])
         pilPSF = Image.fromarray(imgPSF, 'L')
+        slider1.label = 'length'
+        print slider1.label
         draw = ImageDraw.Draw(pilPSF)
         draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
                     lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
                    fill=255, width=lineWidth)
         imgPSF = np.asarray(pilPSF)/255.
         
-    imgPSF = imgPSF.astype(float) 
+    imgPSF = imgPSF.astype(float)
+    plt.show()
     plt.pause(.001)
     update()
     plt.draw()    
