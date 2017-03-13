@@ -8,13 +8,13 @@ Created on Wed Sep 28 16:36:45 2016
 """
 
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches #for drawing lines, rectangles
+#import matplotlib.patches as patches #for drawing lines, rectangles
 from   matplotlib.widgets import Slider
 from   matplotlib.widgets import RadioButtons
 from   PIL import Image, ImageDraw 
 import Tkinter, tkFileDialog
 import numpy as np
-import numpy.ma as ma
+#import numpy.ma as ma
 import sys
 
 # Global Variables
@@ -185,7 +185,6 @@ axSlider1 = fig.add_axes([0.41, 0.5, 0.234, 0.04])
 axSlider1.set_xticks([])
 axSlider1.set_yticks([])
 
-#axSlider2 = plt.axes([0.3, 0.05, 0.237, 0.04])
 axSlider2 = fig.add_axes([0.41, 0.4509, 0.234, 0.04])
 axSlider2.set_xticks([])
 axSlider2.set_yticks([])
@@ -202,15 +201,14 @@ lineOri = slider2.val
 axSlider3 = fig.add_axes([0.41, 0.40, 0.234, 0.04])
 axSlider3.set_xticks([])
 axSlider3.set_yticks([])
+slider3 = Slider(axSlider3, 'snr',  1., 1000., valinit=100.)
+snr = slider3.val
 
-#axSlider4 = plt.axes([0.7, 0.05, 0.237, 0.04])
 axSlider4 = fig.add_axes([0.41, 0.35, 0.234, 0.04])
 axSlider4.set_xticks([])
 axSlider4.set_yticks([])
-
-slider3 = Slider(axSlider3, 'snr',  1., 1000., valinit=100.)
 slider4 = Slider(axSlider4, 'linewidth', 1, 50, valinit=5, valfmt='%d')
-snr, lineWidth = slider3.val, slider4.val
+lineWidth = slider4.val
 
 plt.sca(axDiag)
 diagPlot = plt.imshow(imgHan, cmap='gray',vmin=0.,vmax=1.)
@@ -242,8 +240,7 @@ def update():
     psfLog = np.log(np.maximum(np.abs(fourShftPSF),1.))
     psfLog = psfLog/complex(psfLog.max())
     fourPlot.set_data(psfLog.real)
-      
-    
+          
     # Create the Linear MAP filter, K(u,v) 
     isnr=1./snr
     #-------
@@ -263,17 +260,13 @@ def update():
     fourIshft[0,0] = 1.0+0.0j #set d.c. term for display
 
     fourInv   = np.fft.ifft2(fourIshft)
-
-
-    
+   
 #   make sure fourReal scales 0.to 1.0 for display
     fourInv=np.fft.ifftshift(fourInv)
     fourReal  = np.real(fourInv)
 
-    lmax=fourReal.max()
-    lmin=fourReal.min()
-
- 
+#    lmax=fourReal.max()
+#    lmin=fourReal.min()
 
     plt.sca(axAfter)
     invPlot = plt.imshow(fourReal, cmap='gray')
@@ -316,7 +309,6 @@ def update1(val):
 
 def update2(val):
     global lineOri
-    diff = max((rad2 - rad1), 0.)
     lineOri = slider2.val
     update()
 
@@ -336,18 +328,13 @@ slider2.on_changed(update2)
 slider3.on_changed(update3)
 slider4.on_changed(update4)
 
-# Show image
-#plt.ion()
-
-#plt.sca(axFour)
-#update()                    #for debug
 plt.show()
 
 # Pop fig window to top]]
-#figmgr=plt.get_current_fig_manager()
-#figmgr.canvas.manager.window.raise_()
-#geom=figmgr.window.geometry()
-#(xLoc,yLoc,dxWidth,dyHeight)=geom.getRect()
-#figmgr.window.setGeometry(10,10,dxWidth,dyHeight)
+figmgr=plt.get_current_fig_manager()
+figmgr.canvas.manager.window.raise_()
+geom=figmgr.window.geometry()
+(xLoc,yLoc,dxWidth,dyHeight)=geom.getRect()
+figmgr.window.setGeometry(10,10,dxWidth,dyHeight)
  
 
