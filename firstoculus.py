@@ -260,7 +260,7 @@ def update():
     
     # Inverse Fourier Transform
     fourIshft = np.fft.ifftshift(fourResult)
-    fourIshft[0,0] = 1.0+0.0j #set d.c. term for display
+    fourIshft[0,0] = 0.5+0.0j #set d.c. term for display
 
     fourInv   = np.fft.ifft2(fourIshft)
 
