@@ -8,13 +8,13 @@ Created on Wed Sep 28 16:36:45 2016
 """
 
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches #for drawing lines, rectangles
+#import matplotlib.patches as patches #for drawing lines, rectangles
 from   matplotlib.widgets import Slider
 from   matplotlib.widgets import RadioButtons
 from   PIL import Image, ImageDraw 
 import Tkinter, tkFileDialog
 import numpy as np
-import numpy.ma as ma
+#import numpy.ma as ma
 import sys
 
 # Global Variables
@@ -55,7 +55,7 @@ fig.canvas.mpl_connect('key_press_event', press)
 
 # 
 # Disc / Line Checkbox
-rax = plt.axes([0.41, 0.2, 0.06/winAspect, 0.1])
+rax = plt.axes([0.41, 0.1, 0.06/winAspect, 0.1])
 radio = RadioButtons(rax, ['Disc', 'Line'])
 
 
@@ -185,7 +185,6 @@ axSlider1 = fig.add_axes([0.41, 0.5, 0.234, 0.04])
 axSlider1.set_xticks([])
 axSlider1.set_yticks([])
 
-#axSlider2 = plt.axes([0.3, 0.05, 0.237, 0.04])
 axSlider2 = fig.add_axes([0.41, 0.4509, 0.234, 0.04])
 axSlider2.set_xticks([])
 axSlider2.set_yticks([])
@@ -202,15 +201,20 @@ lineOri = slider2.val
 axSlider3 = fig.add_axes([0.41, 0.40, 0.234, 0.04])
 axSlider3.set_xticks([])
 axSlider3.set_yticks([])
+slider3 = Slider(axSlider3, 'snr',  1., 1000., valinit=100.)
+snr = slider3.val
 
-#axSlider4 = plt.axes([0.7, 0.05, 0.237, 0.04])
 axSlider4 = fig.add_axes([0.41, 0.35, 0.234, 0.04])
 axSlider4.set_xticks([])
 axSlider4.set_yticks([])
+slider4 = Slider(axSlider4, 'linewidth', 1, 50, valinit=5, valfmt='%d')
+lineWidth = slider4.val
 
-slider3 = Slider(axSlider3, 'snr',  1., 1000., valinit=100.)
-slider4 = Slider(axSlider4, 'linewidth', 1, 50, valinit=5.)
-snr, angleThresh = slider3.val, slider4.val
+axSlider5 = fig.add_axes([0.41, 0.3, 0.234, 0.04])
+axSlider5.set_xticks([])
+axSlider5.set_yticks([])
+slider5 = Slider(axSlider5, 'skew', 1, 50, valinit=0)
+skew = slider4.val
 
 plt.sca(axDiag)
 diagPlot = plt.imshow(imgHan, cmap='gray',vmin=0.,vmax=1.)
@@ -242,8 +246,7 @@ def update():
     psfLog = np.log(np.maximum(np.abs(fourShftPSF),1.))
     psfLog = psfLog/complex(psfLog.max())
     fourPlot.set_data(psfLog.real)
-      
-    
+          
     # Create the Linear MAP filter, K(u,v) 
     isnr=1./snr
     #-------
@@ -263,17 +266,13 @@ def update():
     fourIshft[0,0] = 0.5+0.0j #set d.c. term for display
 
     fourInv   = np.fft.ifft2(fourIshft)
-
-
-    
+   
 #   make sure fourReal scales 0.to 1.0 for display
     fourInv=np.fft.ifftshift(fourInv)
     fourReal  = np.real(fourInv)
 
-    lmax=fourReal.max()
-    lmin=fourReal.min()
-
- 
+#    lmax=fourReal.max()
+#    lmin=fourReal.min()
 
     plt.sca(axAfter)
     invPlot = plt.imshow(fourReal, cmap='gray')
@@ -287,18 +286,22 @@ def modefunc(label):
     if   label == 'Disc':
         psfMode = 'Disc'
         imgPSF = (distImg < radius)# This is a Disc PSF
+        slider1.label = 'radius'
     if   label == 'Line':
         psfMode = 'Line'
         lineLength = radius * 3
         imgPSF = np.zeros([2*hafY, 2*hafX])
         pilPSF = Image.fromarray(imgPSF, 'L')
+        slider1.label = 'length'
+        print slider1.label
         draw = ImageDraw.Draw(pilPSF)
         draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
                     lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
                    fill=255, width=lineWidth)
         imgPSF = np.asarray(pilPSF)/255.
         
-    imgPSF = imgPSF.astype(float) 
+    imgPSF = imgPSF.astype(float)
+    plt.show()
     plt.pause(.001)
     update()
     plt.draw()    
@@ -312,7 +315,6 @@ def update1(val):
 
 def update2(val):
     global lineOri
-    diff = max((rad2 - rad1), 0.)
     lineOri = slider2.val
     update()
 
@@ -332,18 +334,13 @@ slider2.on_changed(update2)
 slider3.on_changed(update3)
 slider4.on_changed(update4)
 
-# Show image
-#plt.ion()
-
-#plt.sca(axFour)
-#update()                    #for debug
 plt.show()
 
 # Pop fig window to top]]
-#figmgr=plt.get_current_fig_manager()
-#figmgr.canvas.manager.window.raise_()
-#geom=figmgr.window.geometry()
-#(xLoc,yLoc,dxWidth,dyHeight)=geom.getRect()
-#figmgr.window.setGeometry(10,10,dxWidth,dyHeight)
+figmgr=plt.get_current_fig_manager()
+figmgr.canvas.manager.window.raise_()
+geom=figmgr.window.geometry()
+(xLoc,yLoc,dxWidth,dyHeight)=geom.getRect()
+figmgr.window.setGeometry(10,10,dxWidth,dyHeight)
  
 
