@@ -13,7 +13,8 @@ ptList = []
 inAPoint = False
 selectedPt = None
 scale = 1.
-ptRad = 0.01
+ptRad = 0.001
+buttonState = False
 
 #fig, ax = plt.subplots()
 fig = plt.figure(figsize=(6, 6))
@@ -90,10 +91,9 @@ invMat = np.linalg.inv(transMat)
 
 
 def on_press(event):
-    global selectedPt
+    global selectedPt, buttonState
     if event.inaxes is not ax:
         return
-    print 'button_press'
     inAPoint = False
     for pt in ptList:
         contains, attrd = pt['circle'].contains(event)
@@ -108,6 +108,7 @@ def on_press(event):
                 pt['circle'].set_fc('red')
             fig.canvas.draw()
             break
+    buttonState = True
         
     if not inAPoint:
         xdata = event.xdata
@@ -124,6 +125,38 @@ def on_press(event):
                        'circle':circ})
     selectedPt = ptList[-1]
     
+
+def on_release(event):
+    global buttonState, selectedPt
+    for pt in ptList:
+        if pt['selected']:
+            xdata = event.xdata
+            ydata = event.ydata
+            transPos = [xdata, ydata, 1,]
+            pt['absPos'] = np.matmul(transPos, invMat)
+            pt['circle'].center = transPos[:2]
+            buttonState = False
+            pt['selected'] = False
+            selectedPt = None
+            pt['circle'].set_fc('blue')
+            fig.canvas.draw()
+    buttonState = False
+
     
-fig.canvas.mpl_connect('button_press_event', on_press)
+def on_motion(event):
+    global xdata, ydata, selectedPt, ptList
+    
+    if buttonState:
+        xdata = event.xdata
+        ydata = event.ydata
+        absPos = [xdata, ydata, 1]
+        transPos = np.matmul(absPos, transMat)
+        selectedPt['circle'].center = transPos[:2]
+        selectedPt['xPos'] = transPos[0]
+        selectedPt['yPos'] = transPos[1]
+        fig.canvas.draw()
+        
+fig.canvas.mpl_connect('button_release_event',on_release)
+fig.canvas.mpl_connect('button_press_event',  on_press)
+fig.canvas.mpl_connect('motion_notify_event', on_motion)
 plt.show()
