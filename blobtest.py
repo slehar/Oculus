@@ -1,10 +1,19 @@
 """
 Demo of a PathPatch object.
 """
+import numpy as np
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RadioButtons
+
+
+# global variables
+ptList = []
+inAPoint = False
+selectedPt = None
+scale = 1.
+ptRad = 0.01
 
 #fig, ax = plt.subplots()
 fig = plt.figure(figsize=(6, 6))
@@ -72,8 +81,49 @@ ax.axis('equal')
 
 # callback functions, handling events
 
+
+transMat = np.array([[scale,   0,     0],
+                     [0,       scale, 0],
+                     [0,       0,     1]])
+
+invMat = np.linalg.inv(transMat)
+
+
 def on_press(event):
+    global selectedPt
+    if event.inaxes is not ax:
+        return
     print 'button_press'
+    inAPoint = False
+    for pt in ptList:
+        contains, attrd = pt['circle'].contains(event)
+        if contains:
+            inAPoint = True
+            if pt['selected']:
+                pt['selected'] = False
+                pt['circle'].set_fc('blue')
+            else:
+                pt['selected'] = True
+                selectedPt = pt
+                pt['circle'].set_fc('red')
+            fig.canvas.draw()
+            break
+        
+    if not inAPoint:
+        xdata = event.xdata
+        ydata = event.ydata
+        transPos = [xdata, ydata, 1,]
+        absPos = np.matmul(transPos, invMat)
+        circ = mpatches.Circle(transPos, ptRad)
+        ax.add_patch(circ)
+        ptList.append({'xPos':transPos[0],
+                       'yPos': transPos[1],
+                       'absPos':absPos,
+                       'transPos':transPos,
+                       'selected':True,
+                       'circle':circ})
+    selectedPt = ptList[-1]
+    
     
 fig.canvas.mpl_connect('button_press_event', on_press)
 plt.show()
