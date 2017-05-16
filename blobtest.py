@@ -17,6 +17,7 @@ scale = 1.
 ptRad = 0.001
 buttonState = False
 path_data = []
+patchList = []
 
 # Figure and axes
 plt.close('all')
@@ -66,7 +67,7 @@ invMat = np.linalg.inv(transMat)
 
 
 def on_press(event):
-    global selectedPt, buttonState, path_data
+    global selectedPt, buttonState, path_data, patchList
     if event.inaxes is not ax:
         return
     inAPoint = False
@@ -110,28 +111,30 @@ def on_press(event):
 #            (Path.CLOSEPOLY, (1.58, -2.57)),
 #            ]
 
-        if len(path_data) == 0:
+        if len(path_data) == 0:             # If first point just MOVETO
             path_data.append((Path.MOVETO, (xdata, ydata)))
-        elif len(path_data) == 1:
+        elif len(path_data) == 1:           # If second point draw LINETO 
             path_data.append((Path.LINETO, (xdata, ydata)))
-        elif len(path_data) == 2:
+        elif len(path_data) == 2:           # If third point draw LINETO and CLOSEPOLY
             path_data.append((Path.LINETO, (xdata, ydata)))
             path_data.append((Path.CLOSEPOLY, (ptList[0]['xPos'],ptList[0]['yPos'])))
-        elif len(path_data) >= 3:
+        elif len(path_data) >= 3:           # All further points insert LINETO before CLOSEPOLY
             path_data = path_data[:-1]
             path_data.append((Path.LINETO, (xdata, ydata)))
             path_data.append((Path.CLOSEPOLY, (ptList[0]['xPos'],ptList[0]['yPos'])))
+            for pa in patchList:    # Remove previous polygon before adding new point
+                pa.remove()
+                print '\n%r'%pa
+            patchList = []
+  
         codes, verts = zip(*path_data)
         path = Path(verts, codes)
         patch = mpatches.PathPatch(path, facecolor='r', alpha=0.5)
         print '\n%r'%patch
+        patchList.append(patch)
         ax.add_patch(patch)
         print '\n%r'%path_data
         fig.canvas.draw()
-#        plt.pause(.001)
-#        plt.show()
-#        plt.draw()
-        
     selectedPt = ptList[-1]
     
 
