@@ -1,9 +1,12 @@
 """
 Demo of a PathPatch object.
+See 
+https://matplotlib.org/examples/shapes_and_collections/path_patch_demo.html
 """
 import numpy as np
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+from matplotlib.path import Path
 
 
 # global variables
@@ -13,6 +16,7 @@ selectedPt = None
 scale = 1.
 ptRad = 0.001
 buttonState = False
+path_data = []
 
 # Figure and axes
 plt.close('all')
@@ -62,7 +66,7 @@ invMat = np.linalg.inv(transMat)
 
 
 def on_press(event):
-    global selectedPt, buttonState
+    global selectedPt, buttonState, path_data
     if event.inaxes is not ax:
         return
     inAPoint = False
@@ -77,8 +81,8 @@ def on_press(event):
                 pt['selected'] = True
                 selectedPt = pt
                 pt['circle'].set_fc('red')
-            fig.canvas.draw()
             break
+    fig.canvas.draw()
     buttonState = True
         
     if not inAPoint:
@@ -94,6 +98,40 @@ def on_press(event):
                        'transPos':transPos,
                        'selected':True,
                        'circle':circ})
+#        path_data = [
+#            (Path.MOVETO, (1.58, -2.57)),
+#            (Path.CURVE4, (0.35, -1.1)),
+#            (Path.CURVE4, (-1.75, 2.0)),
+#            (Path.CURVE4, (0.375, 2.0)),
+#            (Path.LINETO, (0.85, 1.15)),
+#            (Path.CURVE4, (2.2, 3.2)),
+#            (Path.CURVE4, (3, 0.05)),
+#            (Path.CURVE4, (2.0, -0.5)),
+#            (Path.CLOSEPOLY, (1.58, -2.57)),
+#            ]
+
+        if len(path_data) == 0:
+            path_data.append((Path.MOVETO, (xdata, ydata)))
+        elif len(path_data) == 1:
+            path_data.append((Path.LINETO, (xdata, ydata)))
+        elif len(path_data) == 2:
+            path_data.append((Path.LINETO, (xdata, ydata)))
+            path_data.append((Path.CLOSEPOLY, (ptList[0]['xPos'],ptList[0]['yPos'])))
+        elif len(path_data) >= 3:
+            path_data = path_data[:-1]
+            path_data.append((Path.LINETO, (xdata, ydata)))
+            path_data.append((Path.CLOSEPOLY, (ptList[0]['xPos'],ptList[0]['yPos'])))
+        codes, verts = zip(*path_data)
+        path = Path(verts, codes)
+        patch = mpatches.PathPatch(path, facecolor='r', alpha=0.5)
+        print '\n%r'%patch
+        ax.add_patch(patch)
+        print '\n%r'%path_data
+        fig.canvas.draw()
+#        plt.pause(.001)
+#        plt.show()
+#        plt.draw()
+        
     selectedPt = ptList[-1]
     
 
