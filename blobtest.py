@@ -42,6 +42,14 @@ ax = fig.add_axes([.1, .1, .8, .8])
 ax.grid()
 ax.axis('equal')
 
+# Keypress 'q' to quit
+def keypress(event):
+    global ptList, data, mute
+    if event.key == 'q':
+        plt.close()        
+fig.canvas.mpl_connect('key_press_event',       keypress)
+
+
 # callback functions, handling events
 
 
