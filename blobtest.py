@@ -14,7 +14,8 @@ scale = 1.
 ptRad = 0.001
 buttonState = False
 
-#fig, ax = plt.subplots()
+# Figure and axes
+plt.close('all')
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_axes([.1, .1, .8, .8])
 
