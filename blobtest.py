@@ -46,6 +46,33 @@ transMat = np.array([[scale,   0,     0],
 
 invMat = np.linalg.inv(transMat)
 
+def updatePolyPath(xdata, ydata): # Update polygon when points move
+    global path_data, patchList
+    
+    if len(path_data) == 0:             # If first point just MOVETO
+        path_data.append((Path.MOVETO, (xdata, ydata)))
+    elif len(path_data) == 1:           # If second point draw LINETO 
+        path_data.append((Path.LINETO, (xdata, ydata)))
+    elif len(path_data) == 2:           # If third point draw LINETO and CLOSEPOLY
+        path_data.append((Path.LINETO, (xdata, ydata)))
+        path_data.append((Path.CLOSEPOLY, (ptList[0]['xPos'],ptList[0]['yPos'])))
+    elif len(path_data) >= 3:           # All further points insert LINETO before CLOSEPOLY
+        path_data = path_data[:-1]
+        path_data.append((Path.LINETO, (xdata, ydata)))
+        path_data.append((Path.CLOSEPOLY, (ptList[0]['xPos'],ptList[0]['yPos'])))
+        for pa in patchList:    # Remove previous polygon before adding new point
+            pa.remove()
+            print '\n%r'%pa
+        patchList = []
+      
+    codes, verts = zip(*path_data)
+    path = Path(verts, codes)
+    patch = mpatches.PathPatch(path, facecolor='r', alpha=0.5)
+    print '\n%r'%patch
+    patchList.append(patch)
+    ax.add_patch(patch)
+    print '\n%r'%path_data
+
 
 def on_press(event):
     global selectedPt, buttonState, path_data, patchList
@@ -82,29 +109,32 @@ def on_press(event):
                        'circle':circ})
 
     
-        if len(path_data) == 0:             # If first point just MOVETO
-            path_data.append((Path.MOVETO, (xdata, ydata)))
-        elif len(path_data) == 1:           # If second point draw LINETO 
-            path_data.append((Path.LINETO, (xdata, ydata)))
-        elif len(path_data) == 2:           # If third point draw LINETO and CLOSEPOLY
-            path_data.append((Path.LINETO, (xdata, ydata)))
-            path_data.append((Path.CLOSEPOLY, (ptList[0]['xPos'],ptList[0]['yPos'])))
-        elif len(path_data) >= 3:           # All further points insert LINETO before CLOSEPOLY
-            path_data = path_data[:-1]
-            path_data.append((Path.LINETO, (xdata, ydata)))
-            path_data.append((Path.CLOSEPOLY, (ptList[0]['xPos'],ptList[0]['yPos'])))
-            for pa in patchList:    # Remove previous polygon before adding new point
-                pa.remove()
-                print '\n%r'%pa
-            patchList = []
-  
-        codes, verts = zip(*path_data)
-        path = Path(verts, codes)
-        patch = mpatches.PathPatch(path, facecolor='r', alpha=0.5)
-        print '\n%r'%patch
-        patchList.append(patch)
-        ax.add_patch(patch)
-        print '\n%r'%path_data
+#        if len(path_data) == 0:             # If first point just MOVETO
+#            path_data.append((Path.MOVETO, (xdata, ydata)))
+#        elif len(path_data) == 1:           # If second point draw LINETO 
+#            path_data.append((Path.LINETO, (xdata, ydata)))
+#        elif len(path_data) == 2:           # If third point draw LINETO and CLOSEPOLY
+#            path_data.append((Path.LINETO, (xdata, ydata)))
+#            path_data.append((Path.CLOSEPOLY, (ptList[0]['xPos'],ptList[0]['yPos'])))
+#        elif len(path_data) >= 3:           # All further points insert LINETO before CLOSEPOLY
+#            path_data = path_data[:-1]
+#            path_data.append((Path.LINETO, (xdata, ydata)))
+#            path_data.append((Path.CLOSEPOLY, (ptList[0]['xPos'],ptList[0]['yPos'])))
+#            for pa in patchList:    # Remove previous polygon before adding new point
+#                pa.remove()
+#                print '\n%r'%pa
+#            patchList = []
+#  
+#        codes, verts = zip(*path_data)
+#        path = Path(verts, codes)
+#        patch = mpatches.PathPatch(path, facecolor='r', alpha=0.5)
+#        print '\n%r'%patch
+#        patchList.append(patch)
+#        ax.add_patch(patch)
+#        print '\n%r'%path_data
+
+        updatePolyPath(xdata, ydata)
+
         fig.canvas.draw()
     selectedPt = ptList[-1]
     
@@ -147,7 +177,7 @@ plt.show()
 
 # Gef fig manager to raise window in top left corner (10,10)
 figmgr=plt.get_current_fig_manager()
-figmgr.canvas.manager.window.raise_()
-geom=figmgr.window.geometry()
-(xLoc,yLoc,dxWidth,dyHeight)=geom.getRect()
-figmgr.window.setGeometry(10,10,dxWidth,dyHeight)
+#figmgr.canvas.manager.window.raise_()
+#geom=figmgr.window.geometry()
+#(xLoc,yLoc,dxWidth,dyHeight)=geom.getRect()
+#figmgr.window.setGeometry(10,10,dxWidth,dyHeight)
