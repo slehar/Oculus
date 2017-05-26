@@ -73,8 +73,6 @@ def updatePolyPath(xdata, ydata, replace=False): # Update polygon when points mo
         if replace:
             print 'replace len=2'
             path_data[:] = []
-#            patchList[1].remove()
-#            patchList[:] = []
             path_data.append((Path.MOVETO, (ptList[0]['xPos'], ptList[0]['yPos'])))
             path_data.append((Path.LINETO, (xdata,            ydata)))
             print 'CLEARED path_data len=%d path_data=%r'%(len(path_data), path_data)
@@ -87,15 +85,11 @@ def updatePolyPath(xdata, ydata, replace=False): # Update polygon when points mo
     elif path_len >= 3:           # All further points insert LINETO before CLOSEPOLY
         if replace:
             print 'replace len=>3'
-#            path_data[:] = []
-#            for pa in patchList:    # Remove previous polygon before adding new point
-#                pa.remove()
-    #            print '\n%r'%pa
-            patchList = []
-            path_data.append(Path.MOVETO, (ptList[0]['xPos'], ptList[0]['yPos']))
-            path_data.append(Path.LINETO, (ptList[1]['xPos'], ptList[1]['yPos']))
-            path_data.append((Path.LINETO, (xdata,            ydata)))
-            path_data.append((Path.CLOSEPOLY, (ptList[0]['xPos'],ptList[0]['yPos'])))
+            path_data[:] = []
+            path_data.append((Path.MOVETO,     (ptList[0]['xPos'], ptList[0]['yPos'])))
+            path_data.append((Path.LINETO,     (ptList[1]['xPos'], ptList[1]['yPos'])))
+            path_data.append((Path.LINETO,     (xdata,             ydata)))
+            path_data.append((Path.CLOSEPOLY,  (ptList[0]['xPos'],ptList[0]['yPos'])))
             print 'CLEARED path_data len=%d path_data=%r'%(len(path_data), path_data)
             print 'Path.MOVETO (%5.2f, %5.2f)'%(ptList[0]['xPos'], ptList[0]['yPos'])
             print 'Path.LINETO (%5.2f, %5.2f)'%(xdata,             ydata)
