@@ -109,7 +109,6 @@ def editPolyPath(xdata, ydata):
                 for ix, pt in enumerate(ptList):
                     print '  ix = %d sel=%r '%(ix, pt['selected'])
                     if pt['selected']:
-                        print 'XXXXXXXXXXXXXXXXX!!!'
                         path_data[ix][1] = [xdata, ydata]
                         print '  ix %d  Path.MOVETO (%5.2f, %5.2f)'%(ix, xdata, ydata)
           
@@ -117,10 +116,13 @@ def editPolyPath(xdata, ydata):
                 print '  nPts = %d'%nPts
                 for ix, pt in enumerate(ptList):
                     if pt['selected']:
+                        print '  XXXXXXXXXXXXXXXXX!!!'
                         path_data[ix][1] = [xdata, ydata]
-                        print 'ix %d  Path.MOVETO (%5.2f, %5.2f)'%(ix, xdata, ydata)
-                for pa in patchList:    # Remove previous polygon before adding new path
-                    pa.remove()
+                        print '  ix %d  Path.MOVETO (%5.2f, %5.2f)'%(ix, xdata, ydata)
+                        path_data.append((Path.CLOSEPOLY,  (ptList[0]['xPos'],ptList[0]['yPos'])))
+                        print '  Path.CLOSEPOLY (%5.2f %5.2f)'%(ptList[0]['xPos'],ptList[0]['yPos'])
+#                for pa in patchList:    # Remove previous polygon before adding new path
+#                    pa.remove()
           
         
 #        path_data.append((Path.CLOSEPOLY,  (ptList[0]['xPos'],ptList[0]['yPos'])))
