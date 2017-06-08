@@ -126,6 +126,9 @@ def editPolyPath(xdata, ydata):
 #        path_data.append((Path.CLOSEPOLY,  (ptList[0]['xPos'],ptList[0]['yPos'])))
 #        print '  Path.CLOSEPOLY (%5.2f %5.2f)'%(ptList[0]['xPos'],ptList[0]['yPos'])
 
+    for pa in patchList:    # Remove previous polygon before adding new path
+        pa.remove()
+
     patchList = []
     codes, verts = zip(*path_data)
     path = Path(verts, codes)
