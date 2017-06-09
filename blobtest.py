@@ -1,5 +1,5 @@
 """
-Demo of a PathPatch object.
+Demo of an interactive PathPatch object.
 See 
 https://matplotlib.org/examples/shapes_and_collections/path_patch_demo.html
 """
@@ -78,55 +78,45 @@ def extendPolyPath(xdata, ydata):
     codes, verts = zip(*path_data)
     path = Path(verts, codes)
     patch = mpatches.PathPatch(path, facecolor='r', alpha=0.5)
-#    print '\n%r'%patch
     patchList.append(patch)
     ax.add_patch(patch)
-#    print '\n%r'%path_data
-
-
 
 
 def editPolyPath(xdata, ydata):
     global ptList, path_data, patchList
-    print '\nin editPolyPath [%5.2f, %5.2f] path_len=%d'%(xdata,ydata,len(path_data))
+#    print '\nin editPolyPath [%5.2f, %5.2f] path_len=%d'%(xdata,ydata,len(path_data))
 
     nPts = len(ptList)
-    print 'nPts = %d' % nPts
+#    print 'nPts = %d' % nPts
     for pt in ptList:
         if pt['selected']:
-            print '  SELECTED'
+#            print '  SELECTED'
             if nPts == 0:             # If no points just return
-                print '  nPts = %d'%nPts
+#                print '  nPts = %d'%nPts
                 return
                    
             elif nPts == 1:           # If first point replace with MOVETO
-                print '  nPts = %d'%nPts
+#                print '  nPts = %d'%nPts
                 path_data[0] = [Path.MOVETO, [xdata, ydata]]
-                print '  Path.MOVETO (%5.2f, %5.2f)'%(xdata, ydata)
+#                print '  Path.MOVETO (%5.2f, %5.2f)'%(xdata, ydata)
                     
             elif nPts == 2:           # If third point draw LINETO and CLOSEPOLY
-                print '  nPts = %d'%nPts
+#                print '  nPts = %d'%nPts
                 for ix, pt in enumerate(ptList):
-                    print '  ix = %d sel=%r '%(ix, pt['selected'])
+#                    print '  ix = %d sel=%r '%(ix, pt['selected'])
                     if pt['selected']:
                         path_data[ix][1] = [xdata, ydata]
-                        print '  ix %d  Path.MOVETO (%5.2f, %5.2f)'%(ix, xdata, ydata)
+#                        print '  ix %d  Path.MOVETO (%5.2f, %5.2f)'%(ix, xdata, ydata)
           
             elif nPts >= 3:           # All further points insert LINETO before CLOSEPOLY        
-                print '  nPts = %d'%nPts
+#                print '  nPts = %d'%nPts
                 for ix, pt in enumerate(ptList):
                     if pt['selected']:
-                        print '  XXXXXXXXXXXXXXXXX!!!'
+                        path_data.pop()
                         path_data[ix][1] = [xdata, ydata]
-                        print '  ix %d  Path.MOVETO (%5.2f, %5.2f)'%(ix, xdata, ydata)
+#                        print '  ix %d  Path.MOVETO (%5.2f, %5.2f)'%(ix, xdata, ydata)
                         path_data.append((Path.CLOSEPOLY,  (ptList[0]['xPos'],ptList[0]['yPos'])))
-                        print '  Path.CLOSEPOLY (%5.2f %5.2f)'%(ptList[0]['xPos'],ptList[0]['yPos'])
-#                for pa in patchList:    # Remove previous polygon before adding new path
-#                    pa.remove()
-          
-        
-#        path_data.append((Path.CLOSEPOLY,  (ptList[0]['xPos'],ptList[0]['yPos'])))
-#        print '  Path.CLOSEPOLY (%5.2f %5.2f)'%(ptList[0]['xPos'],ptList[0]['yPos'])
+#                        print '  Path.CLOSEPOLY (%5.2f %5.2f)'%(ptList[0]['xPos'],ptList[0]['yPos'])
 
     for pa in patchList:    # Remove previous polygon before adding new path
         pa.remove()
@@ -135,111 +125,8 @@ def editPolyPath(xdata, ydata):
     codes, verts = zip(*path_data)
     path = Path(verts, codes)
     patch = mpatches.PathPatch(path, facecolor='r', alpha=0.5)
-#    print '\n%r'%patch
     patchList.append(patch)
     ax.add_patch(patch)
-#    print '\n%r'%path_data
-
-
-'''
-def updatePolyPath(xdata, ydata, replace=False): # Update polygon when points move
-    global path_data, patchList
-
-    print '\nin updatePolyPath [%5.2f, %5.2f] replace=%r, len=%d'%(xdata,ydata,replace, len(path_data))
-
-#    path_len = len(path_data) 
-    nPts = len(ptList)
-    if nPts == 0:             # If first point just MOVETO
-#        print 'append len=0'
-        path_data.append((Path.MOVETO, (xdata, ydata)))
-        print '  Path.MOVETO (%5.2f, %5.2f)'%(xdata, ydata)
-           
-    elif nPts == 1:           # If second point draw LINETO
-        if replace:
-#            print 'replace len=1'
-            path_data[:] = []
-            path_data = [(Path.MOVETO, (xdata, ydata))]
-            print '  Path.MOVETO (%5.2f, %5.2f)'%(xdata, ydata)
-        else:
-#            print 'append len=1'
-            path_data.append((Path.LINETO, (xdata, ydata)))
-            print '  Path.LINETO (%5.2f, %5.2f)'%(xdata, ydata)
-            
-    elif nPts == 2:           # If third point draw LINETO and CLOSEPOLY
-        if replace:
-#            print 'replace len=2'
-            path_data[:] = []
-            
-            
-            if ptList[0] is selectedPt:
-                print '  Selected Pt: 0'
-                path_data.append((Path.MOVETO,     (xdata,             ydata)))
-                path_data.append((Path.LINETO,     (ptList[1]['xPos'], ptList[1]['yPos'])))
-                print '  Path.MOVETO (%5.2f, %5.2f)'%(xdata, ydata)
-                print '  Path.LINETO (%5.2f %5.2f)'%(xdata,ydata)
-            elif ptList[1] is selectedPt:
-                print '  Selected Pt: 1'
-                path_data.append((Path.MOVETO,     (ptList[0]['xPos'], ptList[0]['yPos'])))
-                path_data.append((Path.LINETO,     (xdata,             ydata)))
-                print '  Path.MOVETO (%5.2f, %5.2f)'%(ptList[0]['xPos'], ptList[0]['yPos'])
-                print '  Path.LINETO (%5.2f %5.2f)'%(xdata,ydata)
-                        
-        else:
-#            print 'append len=2'
-            path_data.append((Path.LINETO, (xdata, ydata)))
-            path_data.append((Path.CLOSEPOLY, (ptList[0]['xPos'],ptList[0]['yPos'])))
-            print '  Path.LINETO (%5.2f, %5.2f)'%(xdata, ydata)
-            print '  Path.CLOSEPOLY (%5.2f, %5.2f)'%(ptList[0]['xPos'],ptList[0]['yPos'])
-  
-    elif nPts >= 3:           # All further points insert LINETO before CLOSEPOLY
-        if replace:
-#            print 'replace len=>3'
-            path_data[:] = []
-            
-            
-            for vertex in range(path_len - 1):
-                print 'vertex : %d'%vertex
-                if ptList[vertex] is selectedPt:
-                    print '  Selected Pt: %d'%vertex
-                    if vertex == 0:
-                        path_data.append((Path.MOVETO,     (xdata,             ydata)))
-                        print '  Path.MOVETO (%5.2f %5.2f)'%(xdata,ydata)
-                    else:
-                        path_data.append((Path.LINETO,      (ptList[vertex]['xPos'], ptList[vertex]['yPos'])))
-                        print '  Path.LINETO (%5.2f %5.2f)'%(ptList[vertex]['xPos'], ptList[vertex]['yPos'])
-                else:
-                    if vertex == 0:
-                        path_data.append((Path.MOVETO,     (xdata,             ydata)))
-                        print '  Path.MOVETO (%5.2f %5.2f)'%(xdata,ydata)
-                    else:
-                        path_data.append((Path.LINETO,      (ptList[vertex]['xPos'], ptList[vertex]['yPos'])))
-                        print '  Path.LINETO (%5.2f %5.2f)'%(ptList[vertex]['xPos'], ptList[vertex]['yPos'])
-            
-            path_data.append((Path.CLOSEPOLY,  (ptList[0]['xPos'],ptList[0]['yPos'])))
-            print '  Path.CLOSEPOLY (%5.2f %5.2f)'%(ptList[0]['xPos'],ptList[0]['yPos'])
-        else:
-#            print 'append len>=3'
-            path_data = path_data[:-1]
-            path_data.append((Path.LINETO, (xdata, ydata)))
-            path_data.append((Path.CLOSEPOLY, (ptList[0]['xPos'],ptList[0]['yPos'])))
-            print '  Path.LINETO (%5.2f %5.2f))'%(xdata, ydata)
-            print '  Path.CLOSEPOLY (%5.2f %5.2f)'%(ptList[0]['xPos'],ptList[0]['yPos'])
-
-
-
-    for pa in patchList:    # Remove previous polygon before adding new path
-        pa.remove()
-#            print '\n%r'%pa
-    patchList = []
-    codes, verts = zip(*path_data)
-    path = Path(verts, codes)
-    patch = mpatches.PathPatch(path, facecolor='r', alpha=0.5)
-#    print '\n%r'%patch
-    patchList.append(patch)
-    ax.add_patch(patch)
-#    print '\n%r'%path_data
-'''
-
 
 def on_press(event):
     global selectedPt, buttonState, path_data, patchList
@@ -269,23 +156,15 @@ def on_press(event):
         circ = mpatches.Circle(transPos, ptRad)
         ax.add_patch(circ)
 #        updatePolyPath(xdata, ydata, replace=False)
-        nPts = len(ptList)
-        if nPts == 0:
-            polycode = ''
-        elif nPts == 1:
-            polycode = Path.MOVETO
-        elif nPts >= 2:
-            polycode = Path.LINETO
         ptList.append({'xPos'     : transPos[0],
                        'yPos'     : transPos[1],
                        'absPos'   : absPos,
                        'transPos' : transPos,
                        'selected' : True,
                        'circle'   : circ,
-                       'polycode' : polycode,
                        })
 
-        extendPolyPath(xdata, ydata)           ###############<<<<
+        extendPolyPath(xdata, ydata)
 
         fig.canvas.draw()
     selectedPt = ptList[-1]
@@ -319,8 +198,7 @@ def on_motion(event):
         selectedPt['circle'].center = transPos[:2]
         selectedPt['xPos'] = transPos[0]
         selectedPt['yPos'] = transPos[1]
-#        updatePolyPath(xdata, ydata, replace=True)
-        editPolyPath(xdata, ydata)                  ######<<<<<<<<
+        editPolyPath(xdata, ydata)
         fig.canvas.draw()
 
 
