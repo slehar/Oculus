@@ -11,13 +11,14 @@ from matplotlib.path import Path
 
 # global variables
 ptList = []
+path_data = []
+patchList = []
 inAPoint = False
 selectedPt = None
 scale = 1.
 ptRad = 0.02
 buttonState = False
-path_data = []
-patchList = []
+altKeyPressed = False
 
 # Figure and axes
 plt.close('all')
@@ -30,11 +31,24 @@ ax.grid()
 
 # Keypress 'q' to quit
 def keypress(event):
-    global ptList, data, mute
+    global ptList, data, mute, altKeyPressed
+        
+    if event.key == 'alt':
+        altKeyPressed = True
+        print 'alt key pressed'
     if event.key == 'q':
         plt.close()        
-fig.canvas.mpl_connect('key_press_event',       keypress)
+fig.canvas.mpl_connect('key_press_event', keypress)
 
+# Key release
+def keyrelease(event):
+    global ptList, data, mute, altKeyPressed
+        
+    if event.key == 'alt':
+        altKeyPressed = False
+        print 'alt key UN-pressed'
+        
+fig.canvas.mpl_connect('key_release_event', keyrelease)
 
 # callback functions, handling events
 
@@ -84,13 +98,13 @@ def extendPolyPath(xdata, ydata):
 
 def editPolyPath(xdata, ydata):
     global ptList, path_data, patchList
-#    print '\nin editPolyPath [%5.2f, %5.2f] path_len=%d'%(xdata,ydata,len(path_data))
+    print '\nin editPolyPath [%5.2f, %5.2f] path_len=%d'%(xdata,ydata,len(path_data))
 
     nPts = len(ptList)
 #    print 'nPts = %d' % nPts
     for pt in ptList:
         if pt['selected']:
-#            print '  SELECTED'
+            print '  SELECTED'
             if nPts == 0:             # If no points just return
 #                print '  nPts = %d'%nPts
                 return
@@ -98,15 +112,15 @@ def editPolyPath(xdata, ydata):
             elif nPts == 1:           # If first point replace with MOVETO
 #                print '  nPts = %d'%nPts
                 path_data[0] = [Path.MOVETO, [xdata, ydata]]
-#                print '  Path.MOVETO (%5.2f, %5.2f)'%(xdata, ydata)
+                print '  Path.MOVETO (%5.2f, %5.2f)'%(xdata, ydata)
                     
             elif nPts == 2:           # If third point draw LINETO and CLOSEPOLY
 #                print '  nPts = %d'%nPts
                 for ix, pt in enumerate(ptList):
-#                    print '  ix = %d sel=%r '%(ix, pt['selected'])
+                    print '  ix = %d sel=%r '%(ix, pt['selected'])
                     if pt['selected']:
                         path_data[ix][1] = [xdata, ydata]
-#                        print '  ix %d  Path.MOVETO (%5.2f, %5.2f)'%(ix, xdata, ydata)
+                        print '  ix %d  Path.MOVETO (%5.2f, %5.2f)'%(ix, xdata, ydata)
           
             elif nPts >= 3:           # All further points insert LINETO before CLOSEPOLY        
 #                print '  nPts = %d'%nPts
@@ -114,9 +128,9 @@ def editPolyPath(xdata, ydata):
                     if pt['selected']:
                         path_data.pop()
                         path_data[ix][1] = [xdata, ydata]
-#                        print '  ix %d  Path.MOVETO (%5.2f, %5.2f)'%(ix, xdata, ydata)
+                        print '  ix %d  Path.MOVETO (%5.2f, %5.2f)'%(ix, xdata, ydata)
                         path_data.append((Path.CLOSEPOLY,  (ptList[0]['xPos'],ptList[0]['yPos'])))
-#                        print '  Path.CLOSEPOLY (%5.2f %5.2f)'%(ptList[0]['xPos'],ptList[0]['yPos'])
+                        print '  Path.CLOSEPOLY (%5.2f %5.2f)'%(ptList[0]['xPos'],ptList[0]['yPos'])
 
     for pa in patchList:    # Remove previous polygon before adding new path
         pa.remove()
@@ -151,6 +165,8 @@ def on_press(event):
     if not inAPoint:
         xdata = event.xdata
         ydata = event.ydata
+        anchor1 = None
+        anchor2 = None
         transPos = [xdata, ydata, 1,]
         absPos = np.matmul(transPos, invMat)
         circ = mpatches.Circle(transPos, ptRad)
@@ -162,12 +178,14 @@ def on_press(event):
                        'transPos' : transPos,
                        'selected' : True,
                        'circle'   : circ,
+                       'anchor1'  : anchor1,
+                       'anchor1'  : anchor2,
                        })
 
         extendPolyPath(xdata, ydata)
 
         fig.canvas.draw()
-    selectedPt = ptList[-1]
+        selectedPt = ptList[-1]
     
 
 def on_release(event):
@@ -190,16 +208,25 @@ def on_release(event):
 def on_motion(event):
     global xdata, ydata, selectedPt, ptList
     
+    xdata = event.xdata
+    ydata = event.ydata
+        
+
     if buttonState:
-        xdata = event.xdata
-        ydata = event.ydata
-        absPos = [xdata, ydata, 1]
-        transPos = np.matmul(absPos, transMat)
-        selectedPt['circle'].center = transPos[:2]
-        selectedPt['xPos'] = transPos[0]
-        selectedPt['yPos'] = transPos[1]
-        editPolyPath(xdata, ydata)
-        fig.canvas.draw()
+        
+        if altKeyPressed:
+            print '*** ALT MOTION ***'
+            selectedPt['anchor1'] = (xdata, ydata)
+            print 'anchor1 = (%5.2f, %5.2f)' % (xdata, ydata)
+        else:
+            
+            absPos = [xdata, ydata, 1]
+            transPos = np.matmul(absPos, transMat)
+            selectedPt['circle'].center = transPos[:2]
+            selectedPt['xPos'] = transPos[0]
+            selectedPt['yPos'] = transPos[1]
+            editPolyPath(xdata, ydata)
+            fig.canvas.draw()
 
 
 fig.canvas.mpl_connect('button_release_event', on_release)
