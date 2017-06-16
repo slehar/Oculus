@@ -109,10 +109,24 @@ def editPolyPath(xdata, ydata):
 #                print '  nPts = %d'%nPts
                 return
                    
-            elif nPts == 1:           # If first point replace with MOVETO
+            elif nPts == 1:           # If first point
 #                print '  nPts = %d'%nPts
-                path_data[0] = [Path.MOVETO, [xdata, ydata]]
-#                print '  Path.MOVETO (%5.2f, %5.2f)'%(xdata, ydata)
+                if altKeyPressed:
+                    [oldX, oldY] = path_data[0][1]
+                    path_data = []
+                    path_data.append([Path.MOVETO, [oldX, oldY]])
+                    path_data.append([Path.CURVE3, [xdata, ydata]])
+                    path_data.append([Path.CURVE3, [0.,    0.]])
+#                    path_data.append([Path.CURVE3, [xdata, ydata]])
+#                    print '  Path.MOVETO (%5.2f, %5.2f)'%(oldX, oldY)
+#                    print '  Path.CURVE3 (%5.2f, %5.2f)'%(xdata, ydata)
+                    print path_data
+#                    for pa in patchList:    # Remove previous polygon before adding new path
+#                        pa.remove()
+
+                else:
+                    path_data[0] = [Path.MOVETO, [xdata, ydata]]
+                    print '  Path.MOVETO (%5.2f, %5.2f)'%(xdata, ydata)
                     
             elif nPts == 2:           # If third point draw LINETO and CLOSEPOLY
 #                print '  nPts = %d'%nPts
@@ -218,6 +232,7 @@ def on_motion(event):
             print '*** ALT MOTION ***'
             selectedPt['anchor1'] = (xdata, ydata)
             print 'anchor1 = (%5.2f, %5.2f)' % (xdata, ydata)
+            editPolyPath(xdata, ydata)
         else:
             
             absPos = [xdata, ydata, 1]
