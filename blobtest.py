@@ -59,6 +59,23 @@ transMat = np.array([[scale,   0,     0],
 
 invMat = np.linalg.inv(transMat)
 
+def generatePolyPath(): 
+    global path_data, patchList
+    print 'in generatePolyPath'
+    
+    path_data = []
+    for pt in ptList:
+        path_data.append(pt['pathcode'])
+    print path_data
+    
+    patchList = []
+    codes, verts = zip(*path_data)
+    path = Path(verts, codes)
+    patch = mpatches.PathPatch(path, facecolor='r', alpha=0.5)
+    patchList.append(patch)
+    ax.add_patch(patch)
+    
+
 def extendPolyPath(xdata, ydata): 
     global path_data, patchList
 #    print '\nin extendPolyPath [%5.2f, %5.2f] len=%d'%(xdata,ydata,len(path_data))
@@ -179,24 +196,52 @@ def on_press(event):
     if not inAPoint:
         xdata = event.xdata
         ydata = event.ydata
-        anchor1 = None
-        anchor2 = None
         transPos = [xdata, ydata, 1,]
         absPos = np.matmul(transPos, invMat)
         circ = mpatches.Circle(transPos, ptRad)
         ax.add_patch(circ)
-#        updatePolyPath(xdata, ydata, replace=False)
-        ptList.append({'xPos'     : transPos[0],
-                       'yPos'     : transPos[1],
-                       'absPos'   : absPos,
-                       'transPos' : transPos,
-                       'selected' : True,
-                       'circle'   : circ,
-                       'anchor1'  : anchor1,
-                       'anchor1'  : anchor2,
-                       })
-
-        extendPolyPath(xdata, ydata)
+        if len(ptList) == 0:
+            pathCode = [Path.MOVETO, [xdata, ydata]]
+            ptList.append({'xPos'     : transPos[0],
+                           'yPos'     : transPos[1],
+                           'absPos'   : absPos,
+                           'transPos' : transPos,
+                           'selected' : True,
+                           'circle'   : circ,
+                           'pathcode' : pathCode,
+                           })
+    
+        elif len(ptList) == 1:
+            pathCode = [Path.LINETO, [xdata, ydata]]
+            ptList.append({'xPos'     : transPos[0],
+                           'yPos'     : transPos[1],
+                           'absPos'   : absPos,
+                           'transPos' : transPos,
+                           'selected' : True,
+                           'circle'   : circ,
+                           'pathcode' : pathCode,
+                           })
+        elif len(ptList) == 2:
+            pathCode = [Path.LINETO, [xdata, ydata]]
+            ptList.append({'xPos'     : transPos[0],
+                           'yPos'     : transPos[1],
+                           'absPos'   : absPos,
+                           'transPos' : transPos,
+                           'selected' : True,
+                           'circle'   : circ,
+                           'pathcode' : pathCode,
+                           })
+            pathCode = [Path.CLOSEPOLY, path_data[0][1]]
+            ptList.append({'xPos'     : transPos[0],
+                           'yPos'     : transPos[1],
+                           'absPos'   : absPos,
+                           'transPos' : transPos,
+                           'selected' : False,
+                           'circle'   : circ,
+                           'pathcode' : pathCode,
+                           })
+        generatePolyPath()  
+#        extendPolyPath(xdata, ydata)
 
         fig.canvas.draw()
         selectedPt = ptList[-1]
