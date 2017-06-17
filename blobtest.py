@@ -68,6 +68,8 @@ def generatePolyPath():
         path_data.append(pt['pathcode'])
     print path_data
     
+    for pa in patchList:    # Remove previous polygon before adding new path
+        pa.remove()
     patchList = []
     codes, verts = zip(*path_data)
     path = Path(verts, codes)
@@ -285,7 +287,9 @@ def on_motion(event):
             selectedPt['circle'].center = transPos[:2]
             selectedPt['xPos'] = transPos[0]
             selectedPt['yPos'] = transPos[1]
-            editPolyPath(xdata, ydata)
+            selectedPt['pathcode'][1] = [xdata, ydata]
+            generatePolyPath()
+#            editPolyPath(xdata, ydata)
             fig.canvas.draw()
 
 
