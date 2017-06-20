@@ -50,9 +50,6 @@ def keyrelease(event):
         
 fig.canvas.mpl_connect('key_release_event', keyrelease)
 
-# callback functions, handling events
-
-
 transMat = np.array([[scale,   0,     0],
                      [0,       scale, 0],
                      [0,       0,     1]])
@@ -61,12 +58,14 @@ invMat = np.linalg.inv(transMat)
 
 def generatePolyPath(): 
     global path_data, patchList
-    print 'in generatePolyPath'
+    print '\nin generatePolyPath'
     
     path_data = []
     for pt in ptList:
         path_data.append(pt['pathcode'])
-    print path_data
+#    print path_data
+    for pth in path_data:
+        print '[%2d [%5.2f, %5.2f]]' % (pth[0], pth[1][0], pth[1][1])
     
     for pa in patchList:    # Remove previous polygon before adding new path
         pa.remove()
@@ -77,6 +76,91 @@ def generatePolyPath():
     patchList.append(patch)
     ax.add_patch(patch)
     
+
+def appendPtMOVETO(xyLoc):
+    global path_data
+    xdata, ydata = xyLoc
+    transPos = [xdata, ydata, 1,]
+    absPos = np.matmul(transPos, invMat)
+    circ = mpatches.Circle(transPos, ptRad)
+    ax.add_patch(circ)
+    print 'in appendPtMOVETO [%5.2f, %5.2f]' % (xdata, ydata)
+    xdata, ydata = xyLoc
+    pathCode = [Path.MOVETO, [xdata, ydata]]
+    ptList.append({'xPos'     : transPos[0],
+                   'yPos'     : transPos[1],
+                   'absPos'   : absPos,
+                   'transPos' : transPos,
+                   'selected' : True,
+                   'circle'   : circ,
+                   'pathcode' : pathCode,
+                   })
+    
+def appendPtLINETO(xyLoc):
+    global path_data
+    xdata, ydata = xyLoc
+    transPos = [xdata, ydata, 1,]
+    absPos = np.matmul(transPos, invMat)
+    circ = mpatches.Circle(transPos, ptRad)
+    ax.add_patch(circ)
+    print 'in appendPtLINETO [%5.2f, %5.2f]' % (xdata, ydata)
+    xdata, ydata = xyLoc    
+    pathCode = [Path.LINETO, [xdata, ydata]]
+    ptList.append({'xPos'     : transPos[0],
+                   'yPos'     : transPos[1],
+                   'absPos'   : absPos,
+                   'transPos' : transPos,
+                   'selected' : True,
+                   'circle'   : circ,
+                   'pathcode' : pathCode,
+                   })
+
+def appendPtLINECLOSE(xyLoc):
+    global path_data
+    xdata, ydata = xyLoc
+    transPos = [xdata, ydata, 1,]
+    absPos = np.matmul(transPos, invMat)
+    circ = mpatches.Circle(transPos, ptRad)
+    ax.add_patch(circ)
+    print 'in appendPtLINECLOSE [%5.2f, %5.2f]' % (xdata, ydata)
+    xdata, ydata = xyLoc    
+    pathCode = [Path.LINETO, [xdata, ydata]]
+    ptList.append({'xPos'     : transPos[0],
+                   'yPos'     : transPos[1],
+                   'absPos'   : absPos,
+                   'transPos' : transPos,
+                   'selected' : True,
+                   'circle'   : circ,
+                   'pathcode' : pathCode,
+                   })
+    pathCode = [Path.CLOSEPOLY, path_data[0][1]]
+    ptList.append({'xPos'     : transPos[0],
+                   'yPos'     : transPos[1],
+                   'absPos'   : absPos,
+                   'transPos' : transPos,
+                   'selected' : False,
+                   'circle'   : circ,
+                   'pathcode' : pathCode,
+                   })
+def appendPtREPLACECLOSE(xyLoc):
+    global path_data
+    xdata, ydata = xyLoc
+    transPos = [xdata, ydata, 1,]
+    absPos = np.matmul(transPos, invMat)
+    circ = mpatches.Circle(transPos, ptRad)
+    ax.add_patch(circ)
+    print 'in appendPtREPLACECLOSE [%5.2f, %5.2f]' % (xdata, ydata)
+    xdata, ydata = xyLoc    
+    pathCode = [Path.LINETO, [xdata, ydata]]
+    ptList.insert(-1, {'xPos'     : transPos[0],
+                   'yPos'     : transPos[1],
+                   'absPos'   : absPos,
+                   'transPos' : transPos,
+                   'selected' : True,
+                   'circle'   : circ,
+                   'pathcode' : pathCode,
+                   })
+
 def on_press(event):
     global selectedPt, buttonState, path_data, patchList
     if event.inaxes is not ax:
@@ -104,48 +188,22 @@ def on_press(event):
         absPos = np.matmul(transPos, invMat)
         circ = mpatches.Circle(transPos, ptRad)
         ax.add_patch(circ)
+        
         if len(ptList) == 0:
-            pathCode = [Path.MOVETO, [xdata, ydata]]
-            ptList.append({'xPos'     : transPos[0],
-                           'yPos'     : transPos[1],
-                           'absPos'   : absPos,
-                           'transPos' : transPos,
-                           'selected' : True,
-                           'circle'   : circ,
-                           'pathcode' : pathCode,
-                           })
-    
+            appendPtMOVETO([xdata, ydata])
+            
         elif len(ptList) == 1:
-            pathCode = [Path.LINETO, [xdata, ydata]]
-            ptList.append({'xPos'     : transPos[0],
-                           'yPos'     : transPos[1],
-                           'absPos'   : absPos,
-                           'transPos' : transPos,
-                           'selected' : True,
-                           'circle'   : circ,
-                           'pathcode' : pathCode,
-                           })
+            appendPtLINETO([xdata, ydata])
+            
+                   
         elif len(ptList) == 2:
-            pathCode = [Path.LINETO, [xdata, ydata]]
-            ptList.append({'xPos'     : transPos[0],
-                           'yPos'     : transPos[1],
-                           'absPos'   : absPos,
-                           'transPos' : transPos,
-                           'selected' : True,
-                           'circle'   : circ,
-                           'pathcode' : pathCode,
-                           })
-            pathCode = [Path.CLOSEPOLY, path_data[0][1]]
-            ptList.append({'xPos'     : transPos[0],
-                           'yPos'     : transPos[1],
-                           'absPos'   : absPos,
-                           'transPos' : transPos,
-                           'selected' : False,
-                           'circle'   : circ,
-                           'pathcode' : pathCode,
-                           })
+            appendPtLINECLOSE([xdata, ydata])
+
+        elif len(ptList) > 2:
+            appendPtREPLACECLOSE([xdata, ydata])
+
+
         generatePolyPath()  
-#        extendPolyPath(xdata, ydata)
 
         fig.canvas.draw()
         selectedPt = ptList[-1]
