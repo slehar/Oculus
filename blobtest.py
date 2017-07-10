@@ -19,7 +19,9 @@ scale = 1.
 ptRad = 0.02
 buttonState = False
 altKeyPressed = False
+shiftKeyPressed = False
 curve4Pt = None
+curveType = 'line'
 
 # Figure and axes
 plt.close('all')
@@ -32,22 +34,44 @@ ax.grid()
 
 # Keypress 'q' to quit
 def keypress(event):
-    global ptList, data, mute, altKeyPressed
-        
+    global ptList, data, mute, altKeyPressed, shiftKeyPressed
+    global curveType
+    print 'event key = %s'%event.key    
     if event.key == 'alt':
         altKeyPressed = True
         print 'alt key pressed'
+    if event.key == 'shift':
+        shiftKeyPressed = True
+        print 'shift key pressed'
+    if event.key == '2':
+        curveType = 'line'
+        print '"2" key pressed'
+    if event.key == '3':
+        print '"3" key pressed'
+        curveType = 'curve3'
+    if event.key == '4':
+        print '"4" key pressed'
+        curveType = 'curve4'
     if event.key == 'q':
         plt.close()        
 fig.canvas.mpl_connect('key_press_event', keypress)
 
 # Key release
 def keyrelease(event):
-    global ptList, data, mute, altKeyPressed
+    global ptList, data, mute, altKeyPressed, shiftKeyPressed
         
     if event.key == 'alt':
         altKeyPressed = False
+        print 'shift key UN-pressed'
+    if event.key == 'shift':
+        shiftKeyPressed = False
         print 'alt key UN-pressed'
+    if event.key == '2':
+        print '"2" key UN-pressed'
+    if event.key == '3':
+        print '"3" key UN-pressed'
+    if event.key == '4':
+        print '"4" key UN-pressed'
         
 fig.canvas.mpl_connect('key_release_event', keyrelease)
 
@@ -165,24 +189,59 @@ def appendPtREPLACECLOSE(xyLoc):
                    'pathcode' : pathCode,
                    })
 
-def appendPtCURVE4(xyLoc):
-    global path_data, curve4Pt
+def appendPtCURVE3(xyLoc):
+    global path_data
     xdata, ydata = xyLoc
+    
     transPos = [xdata, ydata, 1,]
     absPos = np.matmul(transPos, invMat)
     circ = mpatches.Circle(transPos, ptRad)
     ax.add_patch(circ)
-    print 'in appendPtCURVE4 [%5.2f, %5.2f]' % (xdata, ydata)
+    print 'in appendPtCURVE3 [%5.2f, %5.2f]' % (xdata, ydata)
     xdata, ydata = xyLoc    
-    pathCode = [Path.LINETO, [xdata, ydata]]
-    ptList.insert(-1, {'xPos'     : transPos[0],
+    pathCode = [Path.MOVETO, [xdata, ydata]]
+    ptList.append({'xPos'     : transPos[0],
                    'yPos'     : transPos[1],
                    'absPos'   : absPos,
                    'transPos' : transPos,
                    'selected' : True,
                    'circle'   : circ,
-                   'pathcode' : pathCode,
+                    'pathcode' : pathCode,
                    })
+                   
+    transPos = [xdata+.2, ydata+.2, 1,]
+    absPos = np.matmul(transPos, invMat)
+    circ = mpatches.Circle(transPos, ptRad)
+    ax.add_patch(circ)
+    print 'in appendPtCURVE3 [%5.2f, %5.2f]' % (xdata, ydata)
+    xdata, ydata = xyLoc    
+    pathCode = [Path.CURVE3, [xdata, ydata]]
+    ptList.append( {'xPos'     : transPos[0],
+                    'yPos'     : transPos[1],
+                    'absPos'   : absPos,
+                    'transPos' : transPos,
+                    'selected' : True,
+                    'circle'   : circ,
+                    'pathcode' : pathCode,
+                   })
+                   
+    transPos = [xdata+.2, ydata-.2, 1,]
+    absPos = np.matmul(transPos, invMat)
+    circ = mpatches.Circle(transPos, ptRad)
+    ax.add_patch(circ)
+    print 'in appendPtCURVE3 [%5.2f, %5.2f]' % (xdata, ydata)
+    xdata, ydata = xyLoc    
+    pathCode = [Path.CURVE3, [xdata, ydata]]
+    ptList.append( {'xPos'     : transPos[0],
+                    'yPos'     : transPos[1],
+                    'absPos'   : absPos,
+                    'transPos' : transPos,
+                    'selected' : True,
+                    'circle'   : circ,
+                    'pathcode' : pathCode,
+                   })
+
+    
 
 
 def on_press(event):
@@ -216,7 +275,10 @@ def on_press(event):
 #        ax.add_patch(circ)
         
         if len(ptList) == 0:
-            appendPtMOVETO([xdata, ydata])            
+            if curveType == 'line':
+                appendPtMOVETO([xdata, ydata])  
+            elif curveType == 'curve3':
+                appendPtCURVE3([xdata, ydata])
         elif len(ptList) == 1:
             appendPtLINETO([xdata, ydata])                               
         elif len(ptList) == 2:
@@ -233,11 +295,11 @@ def on_release(event):
     print 'in on_release'
     for pt in ptList:
         if pt['selected']:
-            xdata = event.xdata
-            ydata = event.ydata
-            transPos = [xdata, ydata, 1,]
-            pt['absPos'] = np.matmul(transPos, invMat)
-            pt['circle'].center = transPos[:2]
+            if shiftKeyPressed:
+                (xdata, ydata) = (event.xdata, event.ydata)
+                transPos = [xdata, ydata, 1,]
+                pt['absPos'] = np.matmul(transPos, invMat)
+                pt['circle'].center = transPos[:2]
             buttonState = False
             pt['selected'] = False
             selectedPt = None
@@ -253,7 +315,7 @@ def on_motion(event):
     xdata = event.xdata
     ydata = event.ydata
         
-    if buttonState:
+    if buttonState and shiftKeyPressed:
         absPos = [xdata, ydata, 1]
         transPos = np.matmul(absPos, transMat)
         selectedPt['circle'].center = transPos[:2]
