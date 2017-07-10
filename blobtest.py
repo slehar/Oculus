@@ -32,6 +32,8 @@ ax.set_ylim([-1., 1.])
 ax.grid()
 #ax.axis('equal')
 
+curveTypeText = fig.text(.48, .95, curveType, size=18)
+
 # Keypress 'q' to quit
 def keypress(event):
     global ptList, data, mute, altKeyPressed, shiftKeyPressed
@@ -45,15 +47,21 @@ def keypress(event):
         print 'shift key pressed'
     if event.key == '2':
         curveType = 'line'
+        curveTypeText.set_text(curveType)
         print '"2" key pressed'
     if event.key == '3':
+        curveType = 'curve3'
+        curveTypeText.set_text(curveType)
         print '"3" key pressed'
         curveType = 'curve3'
     if event.key == '4':
+        curveType = 'curve4'
+        curveTypeText.set_text(curveType)
         print '"4" key pressed'
         curveType = 'curve4'
     if event.key == 'q':
         plt.close()        
+    fig.canvas.draw()
 fig.canvas.mpl_connect('key_press_event', keypress)
 
 # Key release
