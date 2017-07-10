@@ -19,6 +19,7 @@ scale = 1.
 ptRad = 0.02
 buttonState = False
 altKeyPressed = False
+curve4Pt = None
 
 # Figure and axes
 plt.close('all')
@@ -65,7 +66,11 @@ def generatePolyPath():
         path_data.append(pt['pathcode'])
 #    print path_data
     for pth in path_data:
-        print '[%2d [%5.2f, %5.2f]]' % (pth[0], pth[1][0], pth[1][1])
+        print '  [%2d [%5.2f, %5.2f]]' % (pth[0], pth[1][0], pth[1][1])
+    print ax.patches
+    
+#    for pat in ax.patches:
+#        pat.remove()
     
     for pa in patchList:    # Remove previous polygon before adding new path
         pa.remove()
@@ -76,7 +81,6 @@ def generatePolyPath():
     patchList.append(patch)
     ax.add_patch(patch)
     
-
 def appendPtMOVETO(xyLoc):
     global path_data
     xdata, ydata = xyLoc
@@ -161,8 +165,29 @@ def appendPtREPLACECLOSE(xyLoc):
                    'pathcode' : pathCode,
                    })
 
+def appendPtCURVE4(xyLoc):
+    global path_data, curve4Pt
+    xdata, ydata = xyLoc
+    transPos = [xdata, ydata, 1,]
+    absPos = np.matmul(transPos, invMat)
+    circ = mpatches.Circle(transPos, ptRad)
+    ax.add_patch(circ)
+    print 'in appendPtCURVE4 [%5.2f, %5.2f]' % (xdata, ydata)
+    xdata, ydata = xyLoc    
+    pathCode = [Path.LINETO, [xdata, ydata]]
+    ptList.insert(-1, {'xPos'     : transPos[0],
+                   'yPos'     : transPos[1],
+                   'absPos'   : absPos,
+                   'transPos' : transPos,
+                   'selected' : True,
+                   'circle'   : circ,
+                   'pathcode' : pathCode,
+                   })
+
+
 def on_press(event):
     global selectedPt, buttonState, path_data, patchList
+    print 'in on_press'
     if event.inaxes is not ax:
         return
     inAPoint = False
@@ -170,6 +195,7 @@ def on_press(event):
         contains, attrd = pt['circle'].contains(event)
         if contains:
             inAPoint = True
+            print 'inAPoint'
             if pt['selected']:
                 pt['selected'] = False
                 pt['circle'].set_fc('blue')
@@ -187,30 +213,24 @@ def on_press(event):
         transPos = [xdata, ydata, 1,]
         absPos = np.matmul(transPos, invMat)
         circ = mpatches.Circle(transPos, ptRad)
-        ax.add_patch(circ)
+#        ax.add_patch(circ)
         
         if len(ptList) == 0:
-            appendPtMOVETO([xdata, ydata])
-            
+            appendPtMOVETO([xdata, ydata])            
         elif len(ptList) == 1:
-            appendPtLINETO([xdata, ydata])
-            
-                   
+            appendPtLINETO([xdata, ydata])                               
         elif len(ptList) == 2:
             appendPtLINECLOSE([xdata, ydata])
-
         elif len(ptList) > 2:
             appendPtREPLACECLOSE([xdata, ydata])
 
-
         generatePolyPath()  
-
         fig.canvas.draw()
-        selectedPt = ptList[-1]
-    
+        selectedPt = ptList[-1]    
 
 def on_release(event):
     global buttonState, selectedPt
+    print 'in on_release'
     for pt in ptList:
         if pt['selected']:
             xdata = event.xdata
@@ -229,28 +249,19 @@ def on_release(event):
 def on_motion(event):
     global xdata, ydata, selectedPt, ptList
     
+#    print 'in on_motion'
     xdata = event.xdata
     ydata = event.ydata
         
-
     if buttonState:
-        
-        if altKeyPressed:
-            print '*** ALT MOTION ***'
-            selectedPt['anchor1'] = (xdata, ydata)
-            print 'anchor1 = (%5.2f, %5.2f)' % (xdata, ydata)
-            generatePolyPath()
-        else:
-            
-            absPos = [xdata, ydata, 1]
-            transPos = np.matmul(absPos, transMat)
-            selectedPt['circle'].center = transPos[:2]
-            selectedPt['xPos'] = transPos[0]
-            selectedPt['yPos'] = transPos[1]
-            selectedPt['pathcode'][1] = [xdata, ydata]
-            generatePolyPath()
-            fig.canvas.draw()
-
+        absPos = [xdata, ydata, 1]
+        transPos = np.matmul(absPos, transMat)
+        selectedPt['circle'].center = transPos[:2]
+        selectedPt['xPos'] = transPos[0]
+        selectedPt['yPos'] = transPos[1]
+        selectedPt['pathcode'][1] = [xdata, ydata]
+        generatePolyPath()            
+        fig.canvas.draw()
 
 fig.canvas.mpl_connect('button_release_event', on_release)
 fig.canvas.mpl_connect('button_press_event',   on_press)
@@ -260,7 +271,7 @@ plt.show()
 
 # Gef fig manager to raise window in top left corner (10,10)
 figmgr=plt.get_current_fig_manager()
-#figmgr.canvas.manager.window.raise_()
-#geom=figmgr.window.geometry()
-#(xLoc,yLoc,dxWidth,dyHeight)=geom.getRect()
-#figmgr.window.setGeometry(10,10,dxWidth,dyHeight)
+figmgr.canvas.manager.window.raise_()
+geom=figmgr.window.geometry()
+(xLoc,yLoc,dxWidth,dyHeight)=geom.getRect()
+figmgr.window.setGeometry(10,10,dxWidth,dyHeight)
