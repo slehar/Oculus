@@ -123,6 +123,7 @@ def appendPtMOVETO(xyLoc):
     print 'in appendPtMOVETO [%5.2f, %5.2f]' % (xdata, ydata)
     xdata, ydata = xyLoc
     pathCode = [Path.MOVETO, [xdata, ydata]]
+    isAnchor = False
     ptList.append({'xPos'     : transPos[0],
                    'yPos'     : transPos[1],
                    'absPos'   : absPos,
@@ -130,6 +131,7 @@ def appendPtMOVETO(xyLoc):
                    'selected' : True,
                    'circle'   : circ,
                    'pathcode' : pathCode,
+                   'isanchor' : isAnchor,
                    })
     
 def appendPtLINETO(xyLoc):
@@ -142,6 +144,7 @@ def appendPtLINETO(xyLoc):
     print 'in appendPtLINETO [%5.2f, %5.2f]' % (xdata, ydata)
     xdata, ydata = xyLoc    
     pathCode = [Path.LINETO, [xdata, ydata]]
+    isAnchor = False
     ptList.append({'xPos'     : transPos[0],
                    'yPos'     : transPos[1],
                    'absPos'   : absPos,
@@ -149,6 +152,7 @@ def appendPtLINETO(xyLoc):
                    'selected' : True,
                    'circle'   : circ,
                    'pathcode' : pathCode,
+                   'isanchor' : isAnchor,
                    })
 
 def appendPtLINECLOSE(xyLoc):
@@ -161,6 +165,7 @@ def appendPtLINECLOSE(xyLoc):
     print 'in appendPtLINECLOSE [%5.2f, %5.2f]' % (xdata, ydata)
     xdata, ydata = xyLoc    
     pathCode = [Path.LINETO, [xdata, ydata]]
+    isAnchor = False
     ptList.append({'xPos'     : transPos[0],
                    'yPos'     : transPos[1],
                    'absPos'   : absPos,
@@ -168,8 +173,10 @@ def appendPtLINECLOSE(xyLoc):
                    'selected' : True,
                    'circle'   : circ,
                    'pathcode' : pathCode,
+                   'isanchor' : isAnchor,
                    })
     pathCode = [Path.CLOSEPOLY, path_data[0][1]]
+    isAnchor = False
     ptList.append({'xPos'     : transPos[0],
                    'yPos'     : transPos[1],
                    'absPos'   : absPos,
@@ -177,7 +184,9 @@ def appendPtLINECLOSE(xyLoc):
                    'selected' : False,
                    'circle'   : circ,
                    'pathcode' : pathCode,
+                   'isanchor' : isAnchor,
                    })
+                   
 def appendPtREPLACECLOSE(xyLoc):
     global path_data
     xdata, ydata = xyLoc
@@ -188,6 +197,7 @@ def appendPtREPLACECLOSE(xyLoc):
     print 'in appendPtREPLACECLOSE [%5.2f, %5.2f]' % (xdata, ydata)
     xdata, ydata = xyLoc    
     pathCode = [Path.LINETO, [xdata, ydata]]
+    isAnchor = False
     ptList.insert(-1, {'xPos'     : transPos[0],
                    'yPos'     : transPos[1],
                    'absPos'   : absPos,
@@ -195,6 +205,7 @@ def appendPtREPLACECLOSE(xyLoc):
                    'selected' : True,
                    'circle'   : circ,
                    'pathcode' : pathCode,
+                   'isanchor' : isAnchor,
                    })
 
 def appendPtCURVE3(xyLoc):
@@ -208,6 +219,7 @@ def appendPtCURVE3(xyLoc):
     print 'in appendPtCURVE3 [%5.2f, %5.2f]' % (xdata, ydata)
     xdata, ydata = xyLoc    
     pathCode = [Path.MOVETO, [xdata, ydata]]
+    isAnchor = False
     ptList.append({'xPos'     : transPos[0],
                    'yPos'     : transPos[1],
                    'absPos'   : absPos,
@@ -215,15 +227,17 @@ def appendPtCURVE3(xyLoc):
                    'selected' : True,
                    'circle'   : circ,
                     'pathcode' : pathCode,
+                    'isanchor' : isAnchor,
                    })
                    
     transPos = [xdata+.2, ydata+.2, 1,]
     absPos = np.matmul(transPos, invMat)
-    circ = mpatches.Circle(transPos, ptRad)
+    circ = mpatches.Circle(transPos, ptRad, fc='g')
     ax.add_patch(circ)
     print 'in appendPtCURVE3 [%5.2f, %5.2f]' % (xdata, ydata)
     xdata, ydata = xyLoc    
     pathCode = [Path.CURVE3, [xdata, ydata]]
+    isAnchor = True
     ptList.append( {'xPos'     : transPos[0],
                     'yPos'     : transPos[1],
                     'absPos'   : absPos,
@@ -231,15 +245,17 @@ def appendPtCURVE3(xyLoc):
                     'selected' : True,
                     'circle'   : circ,
                     'pathcode' : pathCode,
+                    'isanchor' : isAnchor,
                    })
                    
     transPos = [xdata+.2, ydata-.2, 1,]
     absPos = np.matmul(transPos, invMat)
-    circ = mpatches.Circle(transPos, ptRad)
+    circ = mpatches.Circle(transPos, ptRad, fc='g')
     ax.add_patch(circ)
     print 'in appendPtCURVE3 [%5.2f, %5.2f]' % (xdata, ydata)
     xdata, ydata = xyLoc    
     pathCode = [Path.CURVE3, [xdata, ydata]]
+    isAnchor = True
     ptList.append( {'xPos'     : transPos[0],
                     'yPos'     : transPos[1],
                     'absPos'   : absPos,
@@ -247,6 +263,7 @@ def appendPtCURVE3(xyLoc):
                     'selected' : True,
                     'circle'   : circ,
                     'pathcode' : pathCode,
+                    'isanchor' : isAnchor,
                    })
 
     
@@ -263,9 +280,13 @@ def on_press(event):
         if contains:
             inAPoint = True
             print 'inAPoint'
+            if pt['isanchor']:
+                fc='g'
+            else:
+                fc='b'
             if pt['selected']:
                 pt['selected'] = False
-                pt['circle'].set_fc('blue')
+                pt['circle'].set_fc(fc)
             else:
                 pt['selected'] = True
                 selectedPt = pt
@@ -280,7 +301,6 @@ def on_press(event):
         transPos = [xdata, ydata, 1,]
         absPos = np.matmul(transPos, invMat)
         circ = mpatches.Circle(transPos, ptRad)
-#        ax.add_patch(circ)
         
         if len(ptList) == 0:
             if curveType == 'line':
@@ -302,6 +322,10 @@ def on_release(event):
     global buttonState, selectedPt
     print 'in on_release'
     for pt in ptList:
+        if pt['isanchor']:
+            fc='g'
+        else:
+            fc='b'
         if pt['selected']:
             if shiftKeyPressed:
                 (xdata, ydata) = (event.xdata, event.ydata)
@@ -311,7 +335,7 @@ def on_release(event):
             buttonState = False
             pt['selected'] = False
             selectedPt = None
-            pt['circle'].set_fc('blue')
+            pt['circle'].set_fc(fc)
             fig.canvas.draw()
     buttonState = False
 
