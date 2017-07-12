@@ -109,9 +109,11 @@ def generatePolyPath():
     patchList = []
     codes, verts = zip(*path_data)
     path = Path(verts, codes)
-    patch = mpatches.PathPatch(path, facecolor='r', alpha=0.5)
+    patch = mpatches.PathPatch(path, facecolor='none', visible=True)
     patchList.append(patch)
     ax.add_patch(patch)
+    fig.canvas.draw()
+
     
 def appendPtMOVETO(xyLoc):
     global path_data
@@ -210,7 +212,9 @@ def appendPtREPLACECLOSE(xyLoc):
 
 def appendPtCURVE3(xyLoc):
     global path_data
-    xdata, ydata = xyLoc
+    xdata,  ydata = xyLoc
+    xdata1, ydata1 =  [xdata + .2, ydata + .2]
+    xdata2, ydata2 =  [xdata + .2, ydata - .2]
     
     transPos = [xdata, ydata, 1,]
     absPos = np.matmul(transPos, invMat)
@@ -226,20 +230,19 @@ def appendPtCURVE3(xyLoc):
                    'transPos' : transPos,
                    'selected' : True,
                    'circle'   : circ,
-                    'pathcode' : pathCode,
-                    'isanchor' : isAnchor,
+                   'pathcode' : pathCode,
+                   'isanchor' : isAnchor,
                    })
                    
-    transPos = [xdata+.2, ydata+.2, 1,]
-    absPos = np.matmul(transPos, invMat)
-    circ = mpatches.Circle(transPos, ptRad, fc='g')
+    transPos1 = [xdata1, ydata1, 1,]
+    absPos1 = np.matmul(transPos1, invMat)
+    circ = mpatches.Circle(transPos1, ptRad/2, fc='g')
     ax.add_patch(circ)
-    print 'in appendPtCURVE3 [%5.2f, %5.2f]' % (xdata, ydata)
-    xdata, ydata = xyLoc    
-    pathCode = [Path.CURVE3, [xdata, ydata]]
+    print 'in appendPtCURVE3 [%5.2f, %5.2f]' % (xdata1, ydata1)
+    pathCode = [Path.CURVE3, [xdata1, ydata1]]
     isAnchor = True
-    ptList.append( {'xPos'     : transPos[0],
-                    'yPos'     : transPos[1],
+    ptList.append( {'xPos'     : transPos1[0],
+                    'yPos'     : transPos1[1],
                     'absPos'   : absPos,
                     'transPos' : transPos,
                     'selected' : True,
@@ -248,18 +251,17 @@ def appendPtCURVE3(xyLoc):
                     'isanchor' : isAnchor,
                    })
                    
-    transPos = [xdata+.2, ydata-.2, 1,]
-    absPos = np.matmul(transPos, invMat)
-    circ = mpatches.Circle(transPos, ptRad, fc='g')
+    transPos2 = [xdata2, ydata2, 1,]
+    absPos2 = np.matmul(transPos1, invMat)
+    circ = mpatches.Circle(transPos2, ptRad/2, fc='g')
     ax.add_patch(circ)
-    print 'in appendPtCURVE3 [%5.2f, %5.2f]' % (xdata, ydata)
-    xdata, ydata = xyLoc    
-    pathCode = [Path.CURVE3, [xdata, ydata]]
+    print 'in appendPtCURVE3 [%5.2f, %5.2f]' % (xdata2, ydata2)
+    pathCode = [Path.CURVE3, [xdata2, ydata2]]
     isAnchor = True
-    ptList.append( {'xPos'     : transPos[0],
-                    'yPos'     : transPos[1],
-                    'absPos'   : absPos,
-                    'transPos' : transPos,
+    ptList.append( {'xPos'     : transPos2[0],
+                    'yPos'     : transPos2[1],
+                    'absPos'   : absPos2,
+                    'transPos' : transPos2,
                     'selected' : True,
                     'circle'   : circ,
                     'pathcode' : pathCode,
