@@ -178,7 +178,6 @@ def appendPtLINECLOSE(xyLoc):
                    'pathcode' : pathCode,
                    'isanchor' : isAnchor,
                    })
-    (xdata0, ydata0) = (ptList[0]['xPos'], ptList[0]['yPos'])             
     pathCode = [Path.CLOSEPOLY, [xdata, ydata]]
     isAnchor = False
     ptList.append({'xPos'     : transPos[0],
@@ -215,21 +214,25 @@ def appendPtLINEAPPEND(xyLoc):
 
 #### CURVE3 ####
 
+def setAnchors3(fromLoc, toLoc):
+    (dx, dy) = (toLoc[0] - fromLoc[0],
+                toLoc[1] - fromLoc[1])
+    h = (fromLoc[0] + dx/2., fromLoc[1] + dy/2.)
+    return h
+
 def appendPtCURVE3TO(fromLoc, toLoc):
     global nPts, nAnchors
-    (xdata, ydata)    = fromLoc
-    (xdata2, ydata2)  = toLoc
-    print 'toLoc = %r' % toLoc
-    (dx, dy) = (xdata2 - xdata, ydata2 - ydata)
-    (xdata1, ydata1) = ((xdata + xdata2)/2, ydata+.2)
+    (xdataFr, ydataFr)    = fromLoc
+    (xdataTo, ydataTo)  = toLoc
+    (handleX, handleY) = setAnchors3(fromLoc, toLoc)
                                           
-    transPos1 = [xdata1, ydata1, 1,]
+    transPos1 = [handleX, handleY, 1,]
     absPos1   = np.matmul(transPos1, invMat)
     circ      = mpatches.Circle(transPos1, ptRad/2, fc='g')
     ax.add_patch(circ)
     print 'in appendPtCURVE3TO [%5.2f, %5.2f] [%5.2f, %5.2f]' % \
-                              (xdata, ydata, xdata2, ydata2)
-    pathCode  = [Path.CURVE3, [xdata1, ydata1]]
+                              (xdataFr, ydataFr, xdataTo, ydataTo)
+    pathCode  = [Path.CURVE3, [handleX, handleY]]
     isAnchor  = True
     nAnchors += 1
     ptList.append({'xPos'     : transPos1[0],
@@ -242,12 +245,12 @@ def appendPtCURVE3TO(fromLoc, toLoc):
                    'isanchor' : isAnchor,
                    })
                                       
-    transPos2 = [xdata2, ydata2, 1,]
+    transPos2 = [xdataTo, ydataTo, 1,]
     absPos2   = np.matmul(transPos2, invMat)
     circ      = mpatches.Circle(transPos2, ptRad, fc='b')
     ax.add_patch(circ)
-    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (xdata2, ydata2)
-    pathCode  = [Path.CURVE3, [xdata2, ydata2]]
+    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (xdataTo, ydataTo)
+    pathCode  = [Path.CURVE3, [xdataTo, ydataTo]]
     isAnchor  = False
     nPts += 1
     ptList.append( {'xPos'     : transPos2[0],
@@ -262,21 +265,21 @@ def appendPtCURVE3TO(fromLoc, toLoc):
 
 def appendPtCURVE3CLOSE(fromLoc, toLoc):
     global nPts, nAnchors
-    (xdata, ydata) = fromLoc
-    (xdata2, ydata2) = toLoc
-    (xdata0, ydata0) = (ptList[0]['xPos'], ptList[0]['yPos'])
-    (dx, dy) = (xdata2 - xdata, ydata2 - ydata)
-    (xdata1, ydata1) = ((xdata + xdata2) / 2, ydata + .2)
-    (xdata3, ydata3) = ((xdata2 + xdata0) / 2, ydata2 + .2)
+    (xdataFr, ydataFr) = fromLoc
+    (xdataTo, ydataTo) = toLoc
+    (xdataClose, ydataClose) = (ptList[0]['xPos'], ptList[0]['yPos'])
+    closeLoc = (xdataClose, ydataClose)
+    (handle1X, handle1Y) = setAnchors3(fromLoc, toLoc)
+    (handle2X, handle2Y) = setAnchors3(toLoc,   closeLoc)
 
-    transPos1 = [xdata1, ydata1, 1, ]
+    transPos1 = [handle1X, handle1Y, 1, ]
     absPos1 = np.matmul(transPos1, invMat)
     circ = mpatches.Circle(transPos1, ptRad / 2, fc='g')
     ax.add_patch(circ)
     print 'in appendPtCURVE3CLOSE [%5.2f, %5.2f] [%5.2f, %5.2f]' % (
-        xdata, ydata, xdata1, ydata2)
-    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (xdata1, ydata1)
-    pathCode = [Path.CURVE3, [xdata1, ydata1]]
+        xdataFr, ydataFr, xdataTo, ydataTo)
+    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (handle1X, handle1Y)
+    pathCode = [Path.CURVE3, [handle1X, handle1Y]]
     isAnchor = True
     nAnchors += 1
     ptList.append({'xPos': transPos1[0],
@@ -289,12 +292,12 @@ def appendPtCURVE3CLOSE(fromLoc, toLoc):
                    'isanchor': isAnchor,
                    })
 
-    transPos2 = [xdata2, ydata2, 1, ]
+    transPos2 = [xdataTo, ydataTo, 1, ]
     absPos2 = np.matmul(transPos2, invMat)
     circ = mpatches.Circle(transPos2, ptRad, fc='b')
     ax.add_patch(circ)
-    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (xdata2, ydata2)
-    pathCode = [Path.CURVE3, [xdata2, ydata2]]
+    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (xdataTo, ydataTo)
+    pathCode = [Path.CURVE3, [xdataTo, ydataTo]]
     isAnchor = False
     nPts += 1
     ptList.append({'xPos': transPos2[0],
@@ -307,12 +310,12 @@ def appendPtCURVE3CLOSE(fromLoc, toLoc):
                    'isanchor': isAnchor,
                    })
 
-    transPos3 = [xdata3, ydata3, 1, ]
+    transPos3 = [handle2X, handle2Y, 1, ]
     absPos3 = np.matmul(transPos3, invMat)
     circ = mpatches.Circle(transPos3, ptRad / 2, fc='g')
     ax.add_patch(circ)
-    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (xdata3, ydata3)
-    pathCode = [Path.CURVE3, [xdata3, ydata3]]
+    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (handle2X, handle2Y)
+    pathCode = [Path.CURVE3, [handle2X, handle2Y]]
     isAnchor = True
     nAnchors += 1
     ptList.append({'xPos': transPos3[0],
@@ -325,17 +328,17 @@ def appendPtCURVE3CLOSE(fromLoc, toLoc):
                    'isanchor': isAnchor,
                    })
 
-    transPos4 = [xdata0, ydata0, 1, ]
+    transPos4 = [xdataClose, ydataClose, 1, ]
     absPos4 = np.matmul(transPos4, invMat)
     circ = mpatches.Circle(transPos4, ptRad, fc='b')
     ax.add_patch(circ)
-    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (xdata0, ydata0)
-    pathCode = [Path.CURVE3, [xdata0, ydata0]]
+    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (xdataClose, ydataClose)
+    pathCode = [Path.CURVE3, [xdataClose, ydataClose]]
     isAnchor = False
     nPts += 1
     ptList.append({'xPos': transPos4[0],
                    'yPos': transPos4[1],
-                   'absPos': absPos2,
+                   'absPos': absPos4,
                    'transPos': transPos4,
                    'selected': True,
                    'circle': circ,
@@ -343,13 +346,13 @@ def appendPtCURVE3CLOSE(fromLoc, toLoc):
                    'isanchor': isAnchor,
                    })
 
-    print '  [Path.CLOSEPOLY [%5.2f, %5.2f]]' % (xdata0, ydata0)
-    pathCode = [Path.CLOSEPOLY, [xdata0, ydata0]]
+    print '  [Path.CLOSEPOLY [%5.2f, %5.2f]]' % (xdataClose, ydataClose)
+    pathCode = [Path.CLOSEPOLY, [xdataClose, ydataClose]]
     isAnchor = False
     #    nPts += 1
     ptList.append({'xPos': transPos4[0],
                    'yPos': transPos4[1],
-                   'absPos': absPos2,
+                   'absPos': absPos4,
                    'transPos': transPos4,
                    'selected': True,
                    'circle': circ,
@@ -360,28 +363,33 @@ def appendPtCURVE3CLOSE(fromLoc, toLoc):
 def appendPtCURVE3APPEND(fromLoc, toLoc):
     global nPts, nAnchors
 
-    (xdata, ydata) = fromLoc
-    (xdata2, ydata2) = toLoc
-    (xdata0, ydata0) = (ptList[0]['xPos'], ptList[0]['yPos'])
-    (dx, dy) = (xdata2 - xdata, ydata2 - ydata)
-    (xdata1, ydata1) = ((xdata2 + xdata) / 2 + .2, (ydata2 + ydata) / 2 + .2)
-    (xdata3, ydata3) = ((xdata2 + xdata0) / 2, (ydata2 + ydata) / 2 + .2)
+#    (xdata, ydata) = fromLoc
+#    (xdata2, ydata2) = toLoc
+#    (xdata0, ydata0) = (ptList[0]['xPos'], ptList[0]['yPos'])
+#    (dx, dy) = (xdata2 - xdata, ydata2 - ydata)
+#    (xdata1, ydata1) = ((xdata2 + xdata)  / 2, (ydata2 + ydata) / 2)
+#    (xdata3, ydata3) = ((xdata2 + xdata0) / 2, (ydata2 + ydata) / 2)
 
-    print 'len(ptList) = %d' % len(ptList)
+    (xdataFr, ydataFr) = fromLoc
+    (xdataTo, ydataTo) = toLoc
+    (xdataClose, ydataClose) = (ptList[0]['xPos'], ptList[0]['yPos'])
+    closeLoc = (xdataClose, ydataClose)
+    (handle1X, handle1Y) = setAnchors3(fromLoc, toLoc)
+    (handle2X, handle2Y) = setAnchors3(toLoc,   closeLoc)
+
+
     ptList[-3]['circle'].remove()
-    print 'del ptList[-2]'
     del ptList[-3]
     nAnchors -= 1
-    print 'len(ptList) = %d' % len(ptList)
-
-    transPos1 = [xdata1, ydata1, 1, ]
+    
+    transPos1 = [handle1X, handle1Y, 1, ]
     absPos1 = np.matmul(transPos1, invMat)
     circ = mpatches.Circle(transPos1, ptRad / 2, fc='g')
     ax.add_patch(circ)
     print 'in appendPtCURVE3APPEND [%5.2f, %5.2f] [%5.2f, %5.2f]' % (
-        xdata, ydata, xdata2, ydata2)
-    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (xdata1, ydata1)
-    pathCode = [Path.CURVE3, [xdata1, ydata1]]
+        xdataFr, ydataFr, xdataTo, ydataTo)
+    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (handle1X, handle1Y)
+    pathCode = [Path.CURVE3, [handle1X, handle1Y]]
     isAnchor = True
     nAnchors += 1
     ptList.insert(-2, {'xPos': transPos1[0],
@@ -394,12 +402,12 @@ def appendPtCURVE3APPEND(fromLoc, toLoc):
                        'isanchor': isAnchor,
                        })
 
-    transPos2 = [xdata2, ydata2, 1, ]
+    transPos2 = [xdataTo, ydataTo, 1, ]
     absPos2 = np.matmul(transPos2, invMat)
     circ = mpatches.Circle(transPos2, ptRad, fc='b')
     ax.add_patch(circ)
-    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (xdata2, ydata2)
-    pathCode = [Path.CURVE3, [xdata2, ydata2]]
+    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (xdataTo, ydataTo)
+    pathCode = [Path.CURVE3, [xdataTo, ydataTo]]
     isAnchor = False
     nPts += 1
     ptList.insert(-2, {'xPos': transPos2[0],
@@ -412,18 +420,18 @@ def appendPtCURVE3APPEND(fromLoc, toLoc):
                        'isanchor': isAnchor,
                        })
 
-    transPos3 = [xdata3, ydata3, 1, ]
+    transPos3 = [handle2X, handle2Y, 1, ]
     absPos3 = np.matmul(transPos3, invMat)
     circ = mpatches.Circle(transPos3, ptRad / 2, fc='g')
     ax.add_patch(circ)
-    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (xdata3, ydata3)
-    pathCode = [Path.CURVE3, [xdata3, ydata1]]
+    print '  [Path.CURVE3 [%5.2f, %5.2f]]' % (handle2X, handle2Y)
+    pathCode = [Path.CURVE3, [handle2X, handle2Y]]
     isAnchor = True
     nAnchors += 1
     ptList.insert(-2, {'xPos': transPos3[0],
                        'yPos': transPos3[1],
-                       'absPos': absPos1,
-                       'transPos': transPos1,
+                       'absPos': absPos3,
+                       'transPos': transPos3,
                        'selected': True,
                        'circle': circ,
                        'pathcode': pathCode,
@@ -456,8 +464,8 @@ def appendPtCURVE4TO(fromLoc, toLoc):
     absPos1   = np.matmul(transPos1, invMat)
     circ      = mpatches.Circle(transPos1, ptRad/2, fc='g')
     ax.add_patch(circ)
-#    print 'in appendPtCURVE4TO [%5.2f, %5.2f] [%5.2f, %5.2f]' % \
-#                              (xdataFr, ydataFr, handle2X, handle2Y)
+    print 'in appendPtCURVE4TO [%5.2f, %5.2f] [%5.2f, %5.2f]' % \
+                              (xdataFr, ydataFr, handle2X, handle2Y)
     print '  [Path.CURVE4 [%5.2f, %5.2f]]' % (handle1X, handle1Y)
     pathCode  = [Path.CURVE4, [handle1X, handle1Y]]
     isAnchor  = True
@@ -507,23 +515,6 @@ def appendPtCURVE4TO(fromLoc, toLoc):
                    'pathcode': pathCode,
                    'isanchor': isAnchor,
                    })
-
-#    (xdata0, ydata0) = (ptList[0]['xLoc'], ptList[0]['yLoc'])
-#    transPos0 = [xdata0, ydata0, 1]
-#    absPos0 = np.matmul(transPos0, invMat)
-#    print '  [Path.CLOSEPOLY [%5.2f, %5.2f]]' % (xdata0, ydata0)
-#    pathCode = [Path.CLOSEPOLY, [xdata0, ydata0]]
-#    isAnchor = False
-#    #    nPts += 1
-#    ptList.append({'xPos': xdata0,
-#                   'yPos': ydata0,
-#                   'absPos': absPos0,
-#                   'transPos': transPos0,
-#                   'selected': True,
-#                   'circle': circ,
-#                   'pathcode': pathCode,
-#                   'isanchor': isAnchor,
-#                   })
 
 def appendPtCURVE4CLOSE(fromLoc, toLoc):
     global nPts, nAnchors
@@ -598,8 +589,6 @@ def appendPtCURVE4CLOSE(fromLoc, toLoc):
                    'isanchor': isAnchor,
                    })
                    
-##############
-
     transPos3 = [handle3X, handle3Y, 1, ]
     absPos3 = np.matmul(transPos3, invMat)
     circ = mpatches.Circle(transPos3, ptRad / 2, fc='g')
@@ -636,8 +625,6 @@ def appendPtCURVE4CLOSE(fromLoc, toLoc):
                    'isanchor': isAnchor,
                    })
 
-############## 
-
     transClose = [xdataClose, ydataClose, 1, ]
     absPosClose = np.matmul(transClose, invMat)
     circ = mpatches.Circle(transClose, ptRad, fc='b')
@@ -656,8 +643,6 @@ def appendPtCURVE4CLOSE(fromLoc, toLoc):
                    'isanchor': isAnchor,
                    })
                   
-##############                   
-
     (xdata0, ydata0) = (ptList[0]['xPos'], ptList[0]['yPos'])
     transPos0 = [xdata0, ydata0, 1]
     absPos0 = np.matmul(transPos0, invMat)
@@ -685,12 +670,9 @@ def appendPtCURVE4APPEND(fromLoc, toLoc):
     (xdata1, ydata1) = ((xdata2 + xdata)/2 + .2, (ydata2 + ydata)/2 +.2)
     (xdata3, ydata3) = ((xdata2 + xdata0)/2, (ydata2 + ydata)/2 +.2)
     
-    print 'len(ptList) = %d' % len(ptList)
     ptList[-3]['circle'].remove()
-    print 'del ptList[-2]'
     del ptList[-3]
     nAnchors -= 1
-    print 'len(ptList) = %d' % len(ptList)
                                           
     transPos1 = [xdata1, ydata1, 1,]
     absPos1   = np.matmul(transPos1, invMat)
@@ -820,7 +802,7 @@ def on_press(event):
                 appendPtCURVE4CLOSE([ptList[1+nAnchors]['xPos'], ptList[1+nAnchors]['yPos']],
                                  [xdata,             ydata]) 
             elif nPts > 2:
-                (xdata0, ydata0) = (ptList[0]['xPos'], ptList[0]['yPos'])
+#                (xdata0, ydata0) = (ptList[0]['xPos'], ptList[0]['yPos'])
                 listLen = len(ptList)
                 rmList = (listLen-1, listLen-3, listLen-4)
                 for ix in rmList:
