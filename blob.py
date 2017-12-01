@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
+from   PIL import Image 
 
 
 # global variables
@@ -864,11 +865,18 @@ def openBlobWindow():
     ax.set_ylim([-1., 1.])
     ax.grid()
     curveTypeText = fig.text(.48, .95, curveType, size=18)
+    fig.canvas.set_window_title('Blob')
     fig.canvas.mpl_connect('button_release_event', on_release)
     fig.canvas.mpl_connect('button_press_event',   on_press)
     fig.canvas.mpl_connect('motion_notify_event',  on_motion)
     plt.show()
     return fig, ax
+    
+def returnBlobImage():
+    imgPil = Image.frombytes('RGB', fig.canvas.get_width_height(),
+                             fig.canvas.tostring_rgb())
+    imgNp = np.array(imgPil.convert('L'))/255.
+    return imgNp
     
 if __name__ == '__main__':
     openBlobWindow()

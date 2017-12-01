@@ -25,8 +25,10 @@ ax.add_patch(circ)
 fig.canvas.draw()
 
 def returnImage():
-    return Image.frombytes('RGB', fig.canvas.get_width_height(),
-                           fig.canvas.tostring_rgb())
+    imgPil = Image.frombytes('RGB', fig.canvas.get_width_height(),
+                             fig.canvas.tostring_rgb())
+    imgNp = np.array(imgPil.convert('L'))/255.
+    return imgNp
                         
 img = returnImage()
         

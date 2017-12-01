@@ -16,6 +16,7 @@ import Tkinter, tkFileDialog
 import numpy as np
 #import numpy.ma as ma
 import sys
+import blob
 
 # Global Variables
 radius = 5.
@@ -40,7 +41,7 @@ winYSize = 14
 winAspect = winXSize/winYSize
 plt.close('all')
 fig = plt.figure(figsize=(winXSize, winYSize))
-fig.canvas.set_window_title('First Oculus Attempt')
+fig.canvas.set_window_title('Oculus')
 
 
 # Keypress 'q' to quit callback function
@@ -56,7 +57,7 @@ fig.canvas.mpl_connect('key_press_event', press)
 # 
 # Disc / Line Checkbox
 rax = plt.axes([0.41, 0.1, 0.06/winAspect, 0.1])
-radio = RadioButtons(rax, ['Disc', 'Line'])
+radio = RadioButtons(rax, ['Disc', 'Line', 'Blob'])
 
 
 # Axes for Before Image
@@ -299,6 +300,13 @@ def modefunc(label):
                     lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
                    fill=255, width=lineWidth)
         imgPSF = np.asarray(pilPSF)/255.
+        
+    if label == 'Blob':
+        psfMode = 'Blob'
+        blobFig, blobAx = blob.openBlobWindow()
+        fig.canvas.draw()
+        imgPSF = blob.returnBlobImage()
+        
         
     imgPSF = imgPSF.astype(float)
     plt.show()
