@@ -55,7 +55,7 @@ fig.canvas.mpl_connect('key_press_event', press)
 
 
 # 
-# Disc / Line Checkbox
+# Disc / Line / blob Checkbox
 rax = plt.axes([0.41, 0.1, 0.06/winAspect, 0.1])
 radio = RadioButtons(rax, ['Disc', 'Line', 'Blob'])
 
@@ -237,6 +237,8 @@ def update():
                     lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
                    fill=255, width=lineWidth)
         imgPSF = np.asarray(pilPSF)/255.
+    elif psfMode == 'Blob':
+        imgPSF = blob.returnBlobImage()
     
     realimgPSF = imgPSF.astype(float) 
     psfPlot.set_data(realimgPSF)
