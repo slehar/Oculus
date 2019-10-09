@@ -1,7 +1,5 @@
 """
-Demo of an interactive PathPatch object.
-See 
-https://matplotlib.org/examples/shapes_and_collections/path_patch_demo.html
+blob.py
 """
 
 
@@ -58,7 +56,10 @@ def keypress(event):
         print '"4" key pressed'
         curveType = 'curve4'
     if event.key == 'q':
-        plt.close()        
+        plt.close() 
+    if event.key == 'return':
+        print "RETURN key detected!"
+        
     fig.canvas.draw()
     fig.canvas.mpl_connect('key_press_event', keypress)
 
@@ -857,7 +858,7 @@ def on_motion(event):
         fig.canvas.draw()
 
 # Figure and axes
-def openBlobWindow():
+def openBlobWindow(imgPSF):
     global fig, ax
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_axes([.1, .1, .8, .8])
@@ -869,10 +870,17 @@ def openBlobWindow():
     fig.canvas.mpl_connect('button_release_event', on_release)
     fig.canvas.mpl_connect('button_press_event',   on_press)
     fig.canvas.mpl_connect('motion_notify_event',  on_motion)
+    
     plt.show()
-    return fig, ax
+    
+    imgPSF = numpy.fromstring ( fig.canvas.tostring_argb(), dtype=numpy.float() )
+        
     
 def returnBlobImage():
+    
+    global fig, ax
+    print '*** in blob ***'
+    fig.canvas.draw()
     imgPil = Image.frombytes('RGB', fig.canvas.get_width_height(),
                              fig.canvas.tostring_rgb())
     imgNp = np.array(imgPil.convert('L'))/255.

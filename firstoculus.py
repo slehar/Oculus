@@ -55,7 +55,7 @@ fig.canvas.mpl_connect('key_press_event', press)
 
 
 # 
-# Disc / Line Checkbox
+# Disc / Line / blob Checkbox
 rax = plt.axes([0.41, 0.1, 0.06/winAspect, 0.1])
 radio = RadioButtons(rax, ['Disc', 'Line', 'Blob'])
 
@@ -67,7 +67,7 @@ axBefore.axes.set_yticks([])
 axBefore.set_title('before')
 
 # Read image and display
-imgPil = Image.open(imgFile).convert('LA') #LA = 'luminance + alpha
+imgPil = Image.open(imgFile).convert('L') #LA = 'luminance + alpha'
 imgNp = np.array(imgPil.convert('L'))/255. # convert to L, luminance only
 ySize, xSize = imgNp.shape
 
@@ -237,6 +237,8 @@ def update():
                     lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
                    fill=255, width=lineWidth)
         imgPSF = np.asarray(pilPSF)/255.
+    elif psfMode == 'Blob':
+        imgPSF = blob.returnBlobImage()
     
     realimgPSF = imgPSF.astype(float) 
     psfPlot.set_data(realimgPSF)
@@ -342,13 +344,5 @@ slider2.on_changed(update2)
 slider3.on_changed(update3)
 slider4.on_changed(update4)
 
-plt.show()
-
-# Pop fig window to top]]
-figmgr=plt.get_current_fig_manager()
-figmgr.canvas.manager.window.raise_()
-geom=figmgr.window.geometry()
-(xLoc,yLoc,dxWidth,dyHeight)=geom.getRect()
-figmgr.window.setGeometry(10,10,dxWidth,dyHeight)
- 
+# plt.show()
 
