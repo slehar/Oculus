@@ -17,6 +17,7 @@ import blob
 import utils
 
 class pltFig():
+    ''' Hold global variables '''
 
     radius = 5.
     snr = 100.
@@ -83,8 +84,6 @@ ySize, xSize = imgNp.shape
 
 print 'resized image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
 
-
-
 # Slider 1
 hafRadiusMax = min(ySize,xSize) # Setting upper limit to radius focus blur
 slider1 = utils.get_slider(fig, [0.41, 0.5, 0.234, 0.04],   'radius', 0.5, hafRadiusMax/10, valinit=5.)
@@ -119,14 +118,11 @@ han = np.outer(np.hanning(ySize),np.hanning(xSize))
 imgHan = imgNp*han #apply hanning window
 totalpixels = xSize*ySize
 
-
 plt.sca(axDiag)
 imgplot = plt.imshow(imgNp, cmap='gray')
 x,y=hafX,hafY
 
 K=np.zeros(imgNp.shape)  #array for inverse filter
-
-
 yy, xx = np.mgrid[-hafY:hafY, -hafX:hafX]
 distImg = np.sqrt(xx**2 + yy**2)
 imgPSF = (distImg < figPlot.radius)  # This is a Disc PSF
@@ -157,7 +153,6 @@ psfPlot = plt.imshow(imgPSF, cmap='gray')
 #########################[ def update(): ]########################################
 # This is loop where all the action happens
 def update():
-    global filtImg, imgPSF, K, KLog, psfLog, resultReal, isnr, snr, fourImg, totalpixels, imgNp, fourReal
 
     # PSF in axPSF
     if figPlot.psfMode == 'Disc':
