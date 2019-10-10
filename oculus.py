@@ -9,7 +9,6 @@ Created on Wed Sep 28 16:36:45 2016
 
 import matplotlib.pyplot as plt
 #import matplotlib.patches as patches #for drawing lines, rectangles
-from   matplotlib.widgets import Slider
 from   matplotlib.widgets import RadioButtons
 from   PIL import Image, ImageDraw 
 import Tkinter, tkFileDialog
@@ -17,6 +16,7 @@ import numpy as np
 #import numpy.ma as ma
 import sys
 import blob
+import utils
 
 # Global Variables
 radius = 5.
@@ -60,26 +60,13 @@ fig.canvas.mpl_connect('key_press_event', press)
 rax = plt.axes([0.41, 0.1, 0.06/winAspect, 0.1])
 radio = RadioButtons(rax, ['Disc', 'Line', 'Blob'])
 
-# Get 'axes' (rectangular regions) for each image in the figure
-def get_axes(fig, rect, title=None):
-    ax = fig.add_axes(rect)
-    ax.axes.set_xticks([])
-    ax.axes.set_yticks([])
-    if title:
-        ax.set_title(title)
-    return ax
-
-# Get slider for a given figure
-def get_slider(fig, rect, label, valmin, valmax, valinit):
-    ax = get_axes(fig, rect)
-    return Slider(ax, label, valmin, valmax, valinit)
 
 # Axes for Images
-axBefore = get_axes(fig, [.05, .6, .35/winAspect, .35], 'Before')
-axFour   = get_axes(fig, [.65, .6, .35/winAspect, .35], 'Fourier')
-axPSF    = get_axes(fig, [.05, .2, .35/winAspect, .35], 'PSF')
-axAfter  = get_axes(fig, [.35, .6, .35/winAspect, .35], 'After')
-axDiag   = get_axes(fig, [.65, .2, .35/winAspect, .35], 'Diagnostic')
+axBefore = utils.get_axes(fig, [.05, .6, .35/winAspect, .35], 'Before')
+axFour   = utils.get_axes(fig, [.65, .6, .35/winAspect, .35], 'Fourier')
+axPSF    = utils.get_axes(fig, [.05, .2, .35/winAspect, .35], 'PSF')
+axAfter  = utils.get_axes(fig, [.35, .6, .35/winAspect, .35], 'After')
+axDiag   = utils.get_axes(fig, [.65, .2, .35/winAspect, .35], 'Diagnostic')
 
 # Turn on interactive mode
 plt.ion()
@@ -115,24 +102,24 @@ print 'resized image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
 
 # Slider 1
 hafRadiusMax = min(ySize,xSize) # Setting upper limit to radius focus blur
-slider1 = get_slider(fig, [0.41, 0.5, 0.234, 0.04],   'radius', 0.5, hafRadiusMax/10, valinit=5.)
+slider1 = utils.get_slider(fig, [0.41, 0.5, 0.234, 0.04],   'radius', 0.5, hafRadiusMax/10, valinit=5.)
 rad1 = np.log(slider1.val)      #make log control
 slider1.valtext.set_text(rad1)
 
 # Slider 2
-slider2 = get_slider(fig, [0.41, 0.4509, 0.234, 0.04], 'angle', -np.pi, np.pi, valinit=0.)
+slider2 = utils.get_slider(fig, [0.41, 0.4509, 0.234, 0.04], 'angle', -np.pi, np.pi, valinit=0.)
 lineOri = slider2.val
 
 # Slider 3
-slider3 = get_slider(fig, [0.41, 0.40, 0.234, 0.04], 'SNR', 1., 1000., valinit=100. )
+slider3 = utils.get_slider(fig, [0.41, 0.40, 0.234, 0.04], 'SNR', 1., 1000., valinit=100. )
 snr = slider3.val
 
 # Slider 4
-slider4 = get_slider(fig, [0.41, 0.35, 0.234, 0.04],'linewidth', 1, 50, valinit=5 )
+slider4 = utils.get_slider(fig, [0.41, 0.35, 0.234, 0.04],'linewidth', 1, 50, valinit=5 )
 lineWidth = slider4.val
 
 # Slider 5
-slider5 = get_slider(fig, [0.41, 0.3, 0.234, 0.04], 'skew', 1, 50, valinit=0)
+slider5 = utils.get_slider(fig, [0.41, 0.3, 0.234, 0.04], 'skew', 1, 50, valinit=0)
 skew = slider5.val
 
 
