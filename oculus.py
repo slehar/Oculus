@@ -8,19 +8,17 @@ Created on Wed Sep 28 16:36:45 2016
 """
 
 import matplotlib.pyplot as plt
-#import matplotlib.patches as patches #for drawing lines, rectangles
 from   matplotlib.widgets import RadioButtons
 from   PIL import Image, ImageDraw 
 import Tkinter, tkFileDialog
 import numpy as np
-#import numpy.ma as ma
 import sys
 import blob
 import utils
 
 # Global Variables
 radius = 5.
-rad2=0
+# rad2=0
 snr = 100.
 isnr=1./snr
 slidersLocked = False
@@ -30,6 +28,7 @@ lineOri = 0.
 lineLength = 100.
 lineWidth = 5
 
+
 # Get image using finder dialog
 root = Tkinter.Tk()
 root.withdraw() # Hide the root window
@@ -37,8 +36,8 @@ imgFile = tkFileDialog.askopenfilename(title='Select Image',
                                        initialdir = ".",
                                        initialfile = 'blr.png')
 # Open figure window
-winXSize = 15
-winYSize = 8
+winXSize = 15    # approx inches
+winYSize = 8     # in width & height
 winAspect = winXSize/winYSize
 fig = plt.figure(figsize=(winXSize, winYSize))
 fig.canvas.set_window_title('Oculus')
@@ -82,6 +81,8 @@ ySize, xSize = imgNp.shape
 
 print 'resized image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
 
+
+
 # Slider 1
 hafRadiusMax = min(ySize,xSize) # Setting upper limit to radius focus blur
 slider1 = utils.get_slider(fig, [0.41, 0.5, 0.234, 0.04],   'radius', 0.5, hafRadiusMax/10, valinit=5.)
@@ -104,17 +105,19 @@ lineWidth = slider4.val
 slider5 = utils.get_slider(fig, [0.41, 0.3, 0.234, 0.04], 'skew', 1, 50, valinit=0)
 skew = slider5.val
 
+#########################[ First Pass Initialization ]########################################
 
 hafY, hafX = int(ySize/2), int(xSize/2)
 #print 'input image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
 plt.sca(axBefore)
 beforePlot = plt.imshow(imgNp, cmap='gray',vmin=0.,vmax=1.)
 
-
 # First Pass Hanning
 han = np.outer(np.hanning(ySize),np.hanning(xSize))
 imgHan = imgNp*han #apply hanning window
 totalpixels = xSize*ySize
+
+
 #print 'total pixels = ', totalpixels
 #radius = min(ySize,xSize)/4
 plt.sca(axDiag)
@@ -127,6 +130,11 @@ K=np.zeros(imgNp.shape)#array for inverse filter
 #psf image
 
 yy, xx = np.mgrid[-hafY:hafY, -hafX:hafX]
+distImg = np.sqrt(xx**2 + yy**2)
+imgPSF = (distImg < radius)  # This is a Disc PSF
+
+psfPlot = plt.imshow(imgPSF, cmap='gray')
+plt.sca(axFour)
 
 # Fourier Transform
 fourImg  = np.fft.fft2(imgHan) #set dc term to 1 to control contrast
@@ -138,107 +146,82 @@ fourLog = fourLog/complex(fourLog.max())
 
 plt.sca(axFour)
 fourPlot = plt.imshow(fourLog.real, cmap='gray')
-plt.pause(.001)
-
-#### Fourier Filtering ####
-distImg = np.sqrt(xx**2 + yy**2)
-
-# Generate PSF Image
-#psfMode = 'Line'
-if psfMode == 'Disc':
-    imgPSF = (distImg < radius)# This is a Disc PSF
-elif psfMode == 'line':
-    lineLength = radius*3.
-    imgPSF = np.zeros([2*hafY, 2*hafX])
-    pilPSF = Image.fromarray(imgPSF, 'L')
-    draw = ImageDraw.Draw(pilPSF)
-    draw.Line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
-                lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
-               fill=255, width=lineWidth)
-    imgPSF = np.asarray(pilPSF)/255.
-    
-imgPSF = imgPSF.astype(float) 
-plt.sca(axPSF) # Set imgPSF the "current axes"
-psfPlot = plt.imshow(imgPSF, cmap='gray')
-    
-filtImg=fourShft * imgPSF
-filtLog = np.log(np.maximum(np.abs(filtImg),1.))
-
-
-# Inverse Fourier Transform
-fourIshft = np.fft.ifftshift(filtImg)
-fourInv   = np.fft.ifft2(fourIshft)
-fourReal  = np.real(fourInv)
-plt.sca(axAfter)
-invPlot = plt.imshow(fourReal, cmap='gray', vmin=0, vmax=1)
-
-# Filter radius sliders
-
+# plt.pause(.001)
 
 plt.sca(axDiag)
 diagPlot = plt.imshow(imgHan, cmap='gray',vmin=0.,vmax=1.)
 
-#%%
+imgPSF = imgPSF.astype(float)
+plt.sca(axPSF) # Set imgPSF the "current axes"
+psfPlot = plt.imshow(imgPSF, cmap='gray')
+
+
+#########################[ def update(): ]########################################
 # This is loop where all the action happens
 def update():
     global filtImg, imgPSF, K, KLog, psfLog, resultReal, isnr, snr, fourImg, totalpixels, imgNp, fourReal
-    
+
     # PSF in axPSF
     if psfMode == 'Disc':
-        imgPSF = (distImg < radius)# This is a Disc PSF
+        imgPSF = (distImg < radius)  # This is a Disc PSF
     elif psfMode == 'Line':
-        lineLength = radius*3.
-        imgPSF = np.zeros([2*hafY, 2*hafX])
+        lineLength = radius * 3.
+        imgPSF = np.zeros([2 * hafY, 2 * hafX])
         pilPSF = Image.fromarray(imgPSF, 'L')
         draw = ImageDraw.Draw(pilPSF)
-        draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
-                    lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
-                   fill=255, width=lineWidth)
-        imgPSF = np.asarray(pilPSF)/255.
+        draw.line(((lineLength * -np.cos(lineOri) + hafX, lineLength * -np.sin(lineOri) + hafY,
+                    lineLength * np.cos(lineOri) + hafX, lineLength * np.sin(lineOri) + hafY)),
+                  fill=255, width=lineWidth)
+        imgPSF = np.asarray(pilPSF) / 255.
     elif psfMode == 'Blob':
         imgPSF = blob.returnBlobImage()
-    
-    realimgPSF = imgPSF.astype(float) 
+
+    realimgPSF = imgPSF.astype(float)
     psfPlot.set_data(realimgPSF)
-          
-    #take transform of psf and displaying it 
+
+    # take transform of psf and displaying it
     fourPSF = np.fft.fft2(imgPSF)
     fourShftPSF = np.fft.fftshift(fourPSF)
-    psfLog = np.log(np.maximum(np.abs(fourShftPSF),1.))
-    psfLog = psfLog/complex(psfLog.max())
+    psfLog = np.log(np.maximum(np.abs(fourShftPSF), 1.))
+    psfLog = psfLog / complex(psfLog.max())
     fourPlot.set_data(psfLog.real)
-          
-    # Create the Linear MAP filter, K(u,v) 
-    isnr=1./snr
-    #-------
-    conjfourPSF = np.conj(fourPSF)
-    K=(conjfourPSF + isnr)/((conjfourPSF*fourPSF)+isnr)
-#    print K[hafY:hafY+1,hafX:hafX+1]    #is this the d.c. term?
-    KLog = np.log(np.maximum(np.abs(K),1.))
-    KLog = KLog/complex(KLog.max()) #normalizing 0 to 1
-    diagPlot.set_data(KLog.real) #Plotting diag data
-    norm = np.sum(K)    #for normalizing K
 
-    #do the inverse filtering
-    fourResult=fourShft*K    #convolution in the fourier domain
-    
+    # Create the Linear MAP filter, K(u,v)
+    isnr = 1. / snr
+    # -------
+    conjfourPSF = np.conj(fourPSF)
+    K = (conjfourPSF + isnr) / ((conjfourPSF * fourPSF) + isnr)
+    #    print K[hafY:hafY+1,hafX:hafX+1]    #is this the d.c. term?
+    KLog = np.log(np.maximum(np.abs(K), 1.))
+    KLog = KLog / complex(KLog.max())  # normalizing 0 to 1
+    diagPlot.set_data(KLog.real)  # Plotting diag data
+    norm = np.sum(K)  # for normalizing K
+
+    # do the inverse filtering
+    fourResult = fourShft * K  # convolution in the fourier domain
+
     # Inverse Fourier Transform
     fourIshft = np.fft.ifftshift(fourResult)
-    fourIshft[0,0] = 0.5+0.0j #set d.c. term for display
+    fourIshft[0, 0] = 0.5 + 0.0j  # set d.c. term for display
 
-    fourInv   = np.fft.ifft2(fourIshft)
-   
-#   make sure fourReal scales 0.to 1.0 for display
-    fourInv=np.fft.ifftshift(fourInv)
-    fourReal  = np.real(fourInv)
+    fourInv = np.fft.ifft2(fourIshft)
 
-#    lmax=fourReal.max()
-#    lmin=fourReal.min()
+    #   make sure fourReal scales 0.to 1.0 for display
+    fourInv = np.fft.ifftshift(fourInv)
+    fourReal = np.real(fourInv)
+
+    #    lmax=fourReal.max()
+    #    lmin=fourReal.min()
 
     plt.sca(axAfter)
     invPlot = plt.imshow(fourReal, cmap='gray')
 
     plt.pause(.001)
+
+
+####################[ end def update(): ] ###############@#@
+
+
 
 # radio button callback function to switch PSF mode
 def modefunc(label):
@@ -301,6 +284,8 @@ slider1.on_changed(update1)
 slider2.on_changed(update2)
 slider3.on_changed(update3)
 slider4.on_changed(update4)
+
+update()
 
 # Show [block = leave it open, don't close]
 plt.show(block=True)

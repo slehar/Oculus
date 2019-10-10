@@ -215,7 +215,7 @@ axSlider5 = fig.add_axes([0.41, 0.3, 0.234, 0.04])
 axSlider5.set_xticks([])
 axSlider5.set_yticks([])
 slider5 = Slider(axSlider5, 'skew', 1, 50, valinit=0)
-skew = slider4.val
+skew = slider5.val
 
 plt.sca(axDiag)
 diagPlot = plt.imshow(imgHan, cmap='gray',vmin=0.,vmax=1.)
