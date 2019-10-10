@@ -77,25 +77,7 @@ imgNp = np.array(imgPil.convert('L'))/255. # convert to L, luminance only
 ySize, xSize = imgNp.shape
 print 'original image size', xSize, ySize
 
-# Re-size to even dimensions
-def resize_even_dim(imgNp):
-    ySize, xSize = imgNp.shape
-    if ySize % 2 == 0:
-        print 'y dimension is even'
-    else:
-        print 'y dimension is odd, so drop a row'
-        ySize = ySize - 1
-        imgNp = imgNp[0:ySize]
-
-    if xSize % 2 == 0:
-        print 'x dimension is even'
-    else:
-        print 'x dimension is odd, so drop a column'
-        xSize = xSize - 1
-        imgNp = imgNp[:, :xSize]
-    return imgNp
-
-imgNp = resize_even_dim(imgNp)
+imgNp = utils.resize_even_dim(imgNp)
 ySize, xSize = imgNp.shape
 
 print 'resized image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
