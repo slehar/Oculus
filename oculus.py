@@ -36,7 +36,6 @@ root.withdraw() # Hide the root window
 imgFile = tkFileDialog.askopenfilename(title='Select Image',
                                        initialdir = ".",
                                        initialfile = 'blr.png')
-#imgFile = 'blr.png'
 # Open figure window
 winXSize = 15
 winYSize = 8
@@ -44,18 +43,13 @@ winAspect = winXSize/winYSize
 fig = plt.figure(figsize=(winXSize, winYSize))
 fig.canvas.set_window_title('Oculus')
 
-# plt.ion()
-# plt.show()
-#
-# print "Showed"
-#
-# print "continuing"
-
 # Keypress 'q' to quit callback function
 def press(event):
     global ptList, data
     sys.stdout.flush()
+    print 'Keypress detected'
     if event.key == 'q':
+        print "key is 'q'"
         plt.close()
 # Connect keypress event to callback function
 fig.canvas.mpl_connect('key_press_event', press)
@@ -66,50 +60,87 @@ fig.canvas.mpl_connect('key_press_event', press)
 rax = plt.axes([0.41, 0.1, 0.06/winAspect, 0.1])
 radio = RadioButtons(rax, ['Disc', 'Line', 'Blob'])
 
+# Get 'axes' (rectangular regions) for each image in the figure
+def get_axes(fig, rect, title=None):
+    ax = fig.add_axes(rect)
+    ax.axes.set_xticks([])
+    ax.axes.set_yticks([])
+    if title:
+        ax.set_title(title)
+    return ax
 
-# Axes for Before Image
-axBefore = fig.add_axes([.05, .6, .35/winAspect, .35])
-axBefore.axes.set_xticks([])
-axBefore.axes.set_yticks([])
-axBefore.set_title('before')
+# Get slider for a given figure
+def get_slider(fig, rect, label, valmin, valmax, valinit):
+    ax = get_axes(fig, rect)
+    return Slider(ax, label, valmin, valmax, valinit)
 
+# Axes for Images
+axBefore = get_axes(fig, [.05, .6, .35/winAspect, .35], 'Before')
+axFour   = get_axes(fig, [.65, .6, .35/winAspect, .35], 'Fourier')
+axPSF    = get_axes(fig, [.05, .2, .35/winAspect, .35], 'PSF')
+axAfter  = get_axes(fig, [.35, .6, .35/winAspect, .35], 'After')
+axDiag   = get_axes(fig, [.65, .2, .35/winAspect, .35], 'Diagnostic')
+
+# Turn on interactive mode
 plt.ion()
 
 # Read image and display
 imgPil = Image.open(imgFile).convert('LA') #LA = 'luminance + alpha
 imgNp = np.array(imgPil.convert('L'))/255. # convert to L, luminance only
 ySize, xSize = imgNp.shape
-
 print 'original image size', xSize, ySize
-#here we might like to resize the array if it is not even, by cutting out
-# a line on any odd-dimension.   
-if ySize % 2 == 0:
-    print 'y dimension is even'
-else:
-    print 'y dimension is odd, so drop a row'
-    ySize = ySize-1
-    imgNp = imgNp[0:ySize]
-    
-if xSize % 2 == 0:
-    print 'x dimension is even'
-else:
-    print 'x dimension is odd, so drop a column'
-    xSize = xSize-1
-    imgNp=imgNp[:, :xSize]
-    
 
-print 'input image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
+# Re-size to even dimensions
+def resize_even_dim(imgNp):
+    ySize, xSize = imgNp.shape
+    if ySize % 2 == 0:
+        print 'y dimension is even'
+    else:
+        print 'y dimension is odd, so drop a row'
+        ySize = ySize - 1
+        imgNp = imgNp[0:ySize]
+
+    if xSize % 2 == 0:
+        print 'x dimension is even'
+    else:
+        print 'x dimension is odd, so drop a column'
+        xSize = xSize - 1
+        imgNp = imgNp[:, :xSize]
+    return imgNp
+
+imgNp = resize_even_dim(imgNp)
+ySize, xSize = imgNp.shape
+
+print 'resized image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
+
+# Slider 1
+hafRadiusMax = min(ySize,xSize) # Setting upper limit to radius focus blur
+slider1 = get_slider(fig, [0.41, 0.5, 0.234, 0.04],   'radius', 0.5, hafRadiusMax/10, valinit=5.)
+rad1 = np.log(slider1.val)      #make log control
+slider1.valtext.set_text(rad1)
+
+# Slider 2
+slider2 = get_slider(fig, [0.41, 0.4509, 0.234, 0.04], 'angle', -np.pi, np.pi, valinit=0.)
+lineOri = slider2.val
+
+# Slider 3
+slider3 = get_slider(fig, [0.41, 0.40, 0.234, 0.04], 'SNR', 1., 1000., valinit=100. )
+snr = slider3.val
+
+# Slider 4
+slider4 = get_slider(fig, [0.41, 0.35, 0.234, 0.04],'linewidth', 1, 50, valinit=5 )
+lineWidth = slider4.val
+
+# Slider 5
+slider5 = get_slider(fig, [0.41, 0.3, 0.234, 0.04], 'skew', 1, 50, valinit=0)
+skew = slider5.val
+
 
 hafY, hafX = int(ySize/2), int(xSize/2)
 #print 'input image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
 plt.sca(axBefore)
 beforePlot = plt.imshow(imgNp, cmap='gray',vmin=0.,vmax=1.)
 
-# Axes for Diagnostic window
-axDiag = fig.add_axes([.65, .2, .35/winAspect, .35])
-axDiag.axes.set_xticks([])
-axDiag.axes.set_yticks([])
-axDiag.set_title('Diagnostic')
 
 # First Pass Hanning
 han = np.outer(np.hanning(ySize),np.hanning(xSize))
@@ -125,18 +156,6 @@ x,y=hafX,hafY
 K=np.zeros(imgNp.shape)#array for inverse filter
 
 #psf image
-
-# Axes for Fourier Image
-axFour = fig.add_axes([.65, .6, .35/winAspect, .35])
-axFour.axes.set_xticks([])
-axFour.axes.set_yticks([])
-axFour.set_title('Fourier')
-
-# Axes for PSF Image
-axPSF = fig.add_axes([.05, .2, .35/winAspect, .35])
-axPSF.axes.set_xticks([])
-axPSF.axes.set_yticks([])
-axPSF.set_title('PSF')
 
 yy, xx = np.mgrid[-hafY:hafY, -hafX:hafX]
 
@@ -177,12 +196,6 @@ filtImg=fourShft * imgPSF
 filtLog = np.log(np.maximum(np.abs(filtImg),1.))
 
 
-# Axes for Inverse After Image
-axAfter = fig.add_axes([.35, .6, .35/winAspect, .35])
-axAfter.axes.set_xticks([])
-axAfter.axes.set_yticks([])
-axAfter.set_title('After')
-
 # Inverse Fourier Transform
 fourIshft = np.fft.ifftshift(filtImg)
 fourInv   = np.fft.ifft2(fourIshft)
@@ -191,40 +204,7 @@ plt.sca(axAfter)
 invPlot = plt.imshow(fourReal, cmap='gray', vmin=0, vmax=1)
 
 # Filter radius sliders
-axSlider1 = fig.add_axes([0.41, 0.5, 0.234, 0.04])
-axSlider1.set_xticks([])
-axSlider1.set_yticks([])
 
-axSlider2 = fig.add_axes([0.41, 0.4509, 0.234, 0.04])
-axSlider2.set_xticks([])
-axSlider2.set_yticks([])
-
-hafRadiusMax = min(ySize,xSize) # Setting upper limit to radius focus blur
-slider1 = Slider(axSlider1, 'radius', 0.5, hafRadiusMax/10, valinit=5.)
-rad1 = np.log(slider1.val)      #make log control
-slider1.valtext.set_text(rad1)
-
-slider2 = Slider(axSlider2, 'angle', -np.pi, np.pi, valinit=0.)
-lineOri = slider2.val
-
-# Filter angular sliders
-axSlider3 = fig.add_axes([0.41, 0.40, 0.234, 0.04])
-axSlider3.set_xticks([])
-axSlider3.set_yticks([])
-slider3 = Slider(axSlider3, 'snr',  1., 1000., valinit=100.)
-snr = slider3.val
-
-axSlider4 = fig.add_axes([0.41, 0.35, 0.234, 0.04])
-axSlider4.set_xticks([])
-axSlider4.set_yticks([])
-slider4 = Slider(axSlider4, 'linewidth', 1, 50, valinit=5, valfmt='%d')
-lineWidth = slider4.val
-
-axSlider5 = fig.add_axes([0.41, 0.3, 0.234, 0.04])
-axSlider5.set_xticks([])
-axSlider5.set_yticks([])
-slider5 = Slider(axSlider5, 'skew', 1, 50, valinit=0)
-skew = slider4.val
 
 plt.sca(axDiag)
 diagPlot = plt.imshow(imgHan, cmap='gray',vmin=0.,vmax=1.)
@@ -353,7 +333,7 @@ slider2.on_changed(update2)
 slider3.on_changed(update3)
 slider4.on_changed(update4)
 
-# Show
+# Show [block = leave it open, don't close]
 plt.show(block=True)
 
 
