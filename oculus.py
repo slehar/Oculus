@@ -16,17 +16,19 @@ import sys
 import blob
 import utils
 
-# Global Variables
-radius = 5.
-# rad2=0
-snr = 100.
-isnr=1./snr
-slidersLocked = False
-psfMode = 'Disc'
-#psfMode = 'Line'
-lineOri = 0.
-lineLength = 100.
-lineWidth = 5
+class pltFig():
+
+    radius = 5.
+    snr = 100.
+    isnr=1./snr
+    slidersLocked = False
+    psfMode = 'Disc'
+    lineOri = 0.
+    lineLength = 100.
+    lineWidth = 5
+
+figPlot = pltFig()
+
 
 
 # Get image using finder dialog
@@ -91,15 +93,15 @@ slider1.valtext.set_text(rad1)
 
 # Slider 2
 slider2 = utils.get_slider(fig, [0.41, 0.4509, 0.234, 0.04], 'angle', -np.pi, np.pi, valinit=0.)
-lineOri = slider2.val
+figPlot.lineOri = slider2.val
 
 # Slider 3
 slider3 = utils.get_slider(fig, [0.41, 0.40, 0.234, 0.04], 'SNR', 1., 1000., valinit=100. )
-snr = slider3.val
+figPlot.snr = slider3.val
 
 # Slider 4
 slider4 = utils.get_slider(fig, [0.41, 0.35, 0.234, 0.04],'linewidth', 1, 50, valinit=5 )
-lineWidth = slider4.val
+figPlot.lineWidth = slider4.val
 
 # Slider 5
 slider5 = utils.get_slider(fig, [0.41, 0.3, 0.234, 0.04], 'skew', 1, 50, valinit=0)
@@ -118,20 +120,16 @@ imgHan = imgNp*han #apply hanning window
 totalpixels = xSize*ySize
 
 
-#print 'total pixels = ', totalpixels
-#radius = min(ySize,xSize)/4
 plt.sca(axDiag)
 imgplot = plt.imshow(imgNp, cmap='gray')
 x,y=hafX,hafY
-#sigma=xSize/100.
 
-K=np.zeros(imgNp.shape)#array for inverse filter
+K=np.zeros(imgNp.shape)  #array for inverse filter
 
-#psf image
 
 yy, xx = np.mgrid[-hafY:hafY, -hafX:hafX]
 distImg = np.sqrt(xx**2 + yy**2)
-imgPSF = (distImg < radius)  # This is a Disc PSF
+imgPSF = (distImg < figPlot.radius)  # This is a Disc PSF
 
 psfPlot = plt.imshow(imgPSF, cmap='gray')
 plt.sca(axFour)
@@ -162,18 +160,18 @@ def update():
     global filtImg, imgPSF, K, KLog, psfLog, resultReal, isnr, snr, fourImg, totalpixels, imgNp, fourReal
 
     # PSF in axPSF
-    if psfMode == 'Disc':
-        imgPSF = (distImg < radius)  # This is a Disc PSF
-    elif psfMode == 'Line':
-        lineLength = radius * 3.
+    if figPlot.psfMode == 'Disc':
+        imgPSF = (distImg < figPlot.radius)  # This is a Disc PSF
+    elif figPlot.psfMode == 'Line':
+        figPlot.lineLength = figPlot.radius * 3.
         imgPSF = np.zeros([2 * hafY, 2 * hafX])
         pilPSF = Image.fromarray(imgPSF, 'L')
         draw = ImageDraw.Draw(pilPSF)
-        draw.line(((lineLength * -np.cos(lineOri) + hafX, lineLength * -np.sin(lineOri) + hafY,
-                    lineLength * np.cos(lineOri) + hafX, lineLength * np.sin(lineOri) + hafY)),
-                  fill=255, width=lineWidth)
+        draw.line(((figPlot.lineLength * -np.cos(figPlot.lineOri) + hafX, figPlot.lineLength * -np.sin(figPlot.lineOri) + hafY,
+                    figPlot.lineLength * np.cos(figPlot.lineOri) + hafX, figPlot.lineLength * np.sin(figPlot.lineOri) + hafY)),
+                  fill=255, width=figPlot.lineWidth)
         imgPSF = np.asarray(pilPSF) / 255.
-    elif psfMode == 'Blob':
+    elif figPlot.psfMode == 'Blob':
         imgPSF = blob.returnBlobImage()
 
     realimgPSF = imgPSF.astype(float)
@@ -187,7 +185,7 @@ def update():
     fourPlot.set_data(psfLog.real)
 
     # Create the Linear MAP filter, K(u,v)
-    isnr = 1. / snr
+    isnr = 1. / figPlot.snr
     # -------
     conjfourPSF = np.conj(fourPSF)
     K = (conjfourPSF + isnr) / ((conjfourPSF * fourPSF) + isnr)
@@ -225,27 +223,26 @@ def update():
 
 # radio button callback function to switch PSF mode
 def modefunc(label):
-    global psfMode
-    
+
     if   label == 'Disc':
         psfMode = 'Disc'
-        imgPSF = (distImg < radius)# This is a Disc PSF
+        imgPSF = (distImg < figPlot.radius)# This is a Disc PSF
         slider1.label = 'radius'
     if   label == 'Line':
-        psfMode = 'Line'
-        lineLength = radius * 3
+        figPlot.psfMode = 'Line'
+        figPlot.lineLength = figPlot.radius * 3.
         imgPSF = np.zeros([2*hafY, 2*hafX])
         pilPSF = Image.fromarray(imgPSF, 'L')
         slider1.label = 'length'
         print slider1.label
         draw = ImageDraw.Draw(pilPSF)
-        draw.line(((lineLength * -np.cos(lineOri)+ hafX, lineLength * -np.sin(lineOri)+ hafY,
-                    lineLength *  np.cos(lineOri)+ hafX, lineLength *  np.sin(lineOri)+ hafY)), 
-                   fill=255, width=lineWidth)
+        draw.line(((figPlot.lineLength * -np.cos(figPlot.lineOri)+ hafX, figPlot.lineLength * -np.sin(figPlot.lineOri)+ hafY,
+                    figPlot.lineLength *  np.cos(figPlot.lineOri)+ hafX, figPlot.lineLength *  np.sin(figPlot.lineOri)+ hafY)),
+                   fill=255, width=figPlot.lineWidth)
         imgPSF = np.asarray(pilPSF)/255.
         
     if label == 'Blob':
-        psfMode = 'Blob'
+        figPlot.psfMode = 'Blob'
         blobFig, blobAx = blob.openBlobWindow()
         fig.canvas.draw()
         imgPSF = blob.returnBlobImage()
@@ -260,23 +257,19 @@ radio.on_clicked(modefunc)
 
 #%%
 def update1(val):
-    global radius
-    radius = slider1.val
+    figPlot.radius = slider1.val
     update()
 
 def update2(val):
-    global lineOri
-    lineOri = slider2.val
+    figPlot.lineOri = slider2.val
     update()
 
 def update3(val):
-    global snr
-    snr = slider3.val
+    figPlot.snr = slider3.val
     update()
 
 def update4(val):
-    global lineWidth
-    lineWidth = int(slider4.val)
+    figPlot.lineWidth = int(slider4.val)
     update()
 
 #    fig.canvas.draw()
