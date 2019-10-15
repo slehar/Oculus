@@ -7,6 +7,9 @@ Created on Fri Sep 22 14:37:47 2017
 @author: slehar
 """
 
+
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 fig = plt.figure()
@@ -21,4 +24,3 @@ fig.canvas.mpl_connect('key_press_event', keypress)
 
 #
 plt.show()
-
