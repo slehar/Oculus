@@ -7,6 +7,9 @@ Created on Wed Sep 28 16:36:45 2016
 @author: slehar
 """
 
+import matplotlib
+matplotlib.use('TkAgg')
+
 import matplotlib.pyplot as plt
 from   matplotlib.widgets import RadioButtons
 from   PIL import Image, ImageDraw 
