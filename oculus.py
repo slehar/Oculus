@@ -13,14 +13,13 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from   matplotlib.widgets import RadioButtons
 from   PIL import Image, ImageDraw 
-import Tkinter, tkFileDialog
 import numpy as np
 import sys
 import blob
 import utils
 
 class pltFig():
-    ''' Hold global variables '''
+    ''' Figure plot class '''
 
     radius = 5.
     snr = 100.
@@ -31,16 +30,23 @@ class pltFig():
     lineLength = 100.
     lineWidth = 5
 
+    @property
+    def get_image(self):
+
+        import Tkinter, tkFileDialog
+
+        # Get image using finder dialog
+        root = Tkinter.Tk()
+        root.withdraw()  # Hide the root window
+        imgFile = tkFileDialog.askopenfilename(title='Select Image',
+                                               initialdir=".",
+                                               initialfile='blr.png')
+
+        return imgFile
+
+
 figPlot = pltFig()
 
-
-
-# Get image using finder dialog
-root = Tkinter.Tk()
-root.withdraw() # Hide the root window
-imgFile = tkFileDialog.askopenfilename(title='Select Image',
-                                       initialdir = ".",
-                                       initialfile = 'blr.png')
 # Open figure window
 winXSize = 15    # approx inches
 winYSize = 8     # in width & height
@@ -74,11 +80,13 @@ axAfter  = utils.get_axes(fig, [.35, .6, .35/winAspect, .35], 'After')
 axDiag   = utils.get_axes(fig, [.65, .2, .35/winAspect, .35], 'Diagnostic')
 
 # Turn on interactive mode
-plt.ion()
+# plt.ion()
+
+# figPlot.imgFile = figPlot.get_image()
 
 # Read image and display
-imgPil = Image.open(imgFile).convert('LA') #LA = 'luminance + alpha
-imgNp = np.array(imgPil.convert('L'))/255. # convert to L, luminance only
+imgPil = Image.open(figPlot.get_image).convert('LA') # LA = 'luminance + alpha
+imgNp = np.array(imgPil.convert('L'))/255.           # convert to L, luminance only
 ySize, xSize = imgNp.shape
 print 'original image size', xSize, ySize
 
@@ -212,7 +220,7 @@ def update():
     plt.sca(axAfter)
     invPlot = plt.imshow(fourReal, cmap='gray')
 
-    plt.pause(.001)
+    # plt.pause(.001)
 
 
 ####################[ end def update(): ] ###############@#@
@@ -279,7 +287,7 @@ slider4.on_changed(update4)
 update()
 
 # Show [block = leave it open, don't close]
-plt.show(block=True)
-
+# plt.show(block=True)
+plt.show()
 
 
