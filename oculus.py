@@ -19,7 +19,7 @@ import blob
 import utils
 
 class pltFig():
-    ''' Figure plot class '''
+    ''' Plot Figure class '''
 
     radius = 5.
     snr = 100.
@@ -30,8 +30,18 @@ class pltFig():
     lineLength = 100.
     lineWidth = 5
 
+    def __init__(self):
+
+        # Open figure window
+        winXSize = 15  # approx inches
+        winYSize = 8  # in width & height
+        self.winAspect = winXSize / winYSize
+        self.fig = plt.figure(figsize=(winXSize, winYSize))
+        self.fig.canvas.set_window_title('Oculus')
+
     @property
     def get_image(self):
+        ''' get_image '''
 
         import Tkinter, tkFileDialog
 
@@ -47,12 +57,6 @@ class pltFig():
 
 figPlot = pltFig()
 
-# Open figure window
-winXSize = 15    # approx inches
-winYSize = 8     # in width & height
-winAspect = winXSize/winYSize
-fig = plt.figure(figsize=(winXSize, winYSize))
-fig.canvas.set_window_title('Oculus')
 
 # Keypress 'q' to quit callback function
 def press(event):
@@ -63,21 +67,21 @@ def press(event):
         print "key is 'q'"
         plt.close()
 # Connect keypress event to callback function
-fig.canvas.mpl_connect('key_press_event', press)
+figPlot.fig.canvas.mpl_connect('key_press_event', press)
 
 
 # 
 # Disc / Line / blob Checkbox
-rax = plt.axes([0.41, 0.1, 0.06/winAspect, 0.1])
+rax = plt.axes([0.41, 0.1, 0.06/figPlot.winAspect, 0.1])
 radio = RadioButtons(rax, ['Disc', 'Line', 'Blob'])
 
 
 # Axes for Images
-axBefore = utils.get_axes(fig, [.05, .6, .35/winAspect, .35], 'Before')
-axFour   = utils.get_axes(fig, [.65, .6, .35/winAspect, .35], 'Fourier')
-axPSF    = utils.get_axes(fig, [.05, .2, .35/winAspect, .35], 'PSF')
-axAfter  = utils.get_axes(fig, [.35, .6, .35/winAspect, .35], 'After')
-axDiag   = utils.get_axes(fig, [.65, .2, .35/winAspect, .35], 'Diagnostic')
+axBefore = utils.get_axes(figPlot.fig, [.05, .6, .35/figPlot.winAspect, .35], 'Before')
+axFour   = utils.get_axes(figPlot.fig, [.65, .6, .35/figPlot.winAspect, .35], 'Fourier')
+axPSF    = utils.get_axes(figPlot.fig, [.05, .2, .35/figPlot.winAspect, .35], 'PSF')
+axAfter  = utils.get_axes(figPlot.fig, [.35, .6, .35/figPlot.winAspect, .35], 'After')
+axDiag   = utils.get_axes(figPlot.fig, [.65, .2, .35/figPlot.winAspect, .35], 'Diagnostic')
 
 # Turn on interactive mode
 # plt.ion()
@@ -97,24 +101,24 @@ print 'resized image', 'xSize=', xSize, 'ySize=', ySize, 'pixels'
 
 # Slider 1
 hafRadiusMax = min(ySize,xSize) # Setting upper limit to radius focus blur
-slider1 = utils.get_slider(fig, [0.41, 0.5, 0.234, 0.04],   'radius', 0.5, hafRadiusMax/10, valinit=5.)
+slider1 = utils.get_slider(figPlot.fig, [0.41, 0.5, 0.234, 0.04],   'radius', 0.5, hafRadiusMax/10, valinit=5.)
 rad1 = np.log(slider1.val)      #make log control
 slider1.valtext.set_text(rad1)
 
 # Slider 2
-slider2 = utils.get_slider(fig, [0.41, 0.4509, 0.234, 0.04], 'angle', -np.pi, np.pi, valinit=0.)
+slider2 = utils.get_slider(figPlot.fig, [0.41, 0.4509, 0.234, 0.04], 'angle', -np.pi, np.pi, valinit=0.)
 figPlot.lineOri = slider2.val
 
 # Slider 3
-slider3 = utils.get_slider(fig, [0.41, 0.40, 0.234, 0.04], 'SNR', 1., 1000., valinit=100. )
+slider3 = utils.get_slider(figPlot.fig, [0.41, 0.40, 0.234, 0.04], 'SNR', 1., 1000., valinit=100. )
 figPlot.snr = slider3.val
 
 # Slider 4
-slider4 = utils.get_slider(fig, [0.41, 0.35, 0.234, 0.04],'linewidth', 1, 50, valinit=5 )
+slider4 = utils.get_slider(figPlot.fig, [0.41, 0.35, 0.234, 0.04],'linewidth', 1, 50, valinit=5 )
 figPlot.lineWidth = slider4.val
 
 # Slider 5
-slider5 = utils.get_slider(fig, [0.41, 0.3, 0.234, 0.04], 'skew', 1, 50, valinit=0)
+slider5 = utils.get_slider(figPlot.fig, [0.41, 0.3, 0.234, 0.04], 'skew', 1, 50, valinit=0)
 skew = slider5.val
 
 #########################[ First Pass Initialization ]########################################
@@ -250,7 +254,7 @@ def modefunc(label):
     if label == 'Blob':
         figPlot.psfMode = 'Blob'
         blobFig, blobAx = blob.openBlobWindow()
-        fig.canvas.draw()
+        figPlot.fig.canvas.draw()
         imgPSF = blob.returnBlobImage()
         
         

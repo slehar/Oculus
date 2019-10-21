@@ -38,7 +38,7 @@ imgFile = tkFileDialog.askopenfilename(initialfile = 'blr.png')
 # Open figure window
 winXSize = 18
 winYSize = 14
-winAspect = winXSize/winYSize
+figPlot.winAspect = winXSize/winYSize
 plt.close('all')
 fig = plt.figure(figsize=(winXSize, winYSize))
 fig.canvas.set_window_title('Oculus')
@@ -56,12 +56,12 @@ fig.canvas.mpl_connect('key_press_event', press)
 
 # 
 # Disc / Line / blob Checkbox
-rax = plt.axes([0.41, 0.1, 0.06/winAspect, 0.1])
+rax = plt.axes([0.41, 0.1, 0.06/figPlot.winAspect, 0.1])
 radio = RadioButtons(rax, ['Disc', 'Line', 'Blob'])
 
 
 # Axes for Before Image
-axBefore = fig.add_axes([.05, .6, .35/winAspect, .35])
+axBefore = fig.add_axes([.05, .6, .35/figPlot.winAspect, .35])
 axBefore.axes.set_xticks([])
 axBefore.axes.set_yticks([])
 axBefore.set_title('before')
@@ -97,7 +97,7 @@ plt.sca(axBefore)
 beforePlot = plt.imshow(imgNp, cmap='gray',vmin=0.,vmax=1.)
 
 # Axes for Diagnostic window
-axDiag = fig.add_axes([.65, .2, .35/winAspect, .35])
+axDiag = fig.add_axes([.65, .2, .35/figPlot.winAspect, .35])
 axDiag.axes.set_xticks([])
 axDiag.axes.set_yticks([])
 axDiag.set_title('Diagnostic')
@@ -118,13 +118,13 @@ K=np.zeros(imgNp.shape)#array for inverse filter
 #psf image
 
 # Axes for Fourier Image
-axFour = fig.add_axes([.65, .6, .35/winAspect, .35])
+axFour = fig.add_axes([.65, .6, .35/figPlot.winAspect, .35])
 axFour.axes.set_xticks([])
 axFour.axes.set_yticks([])
 axFour.set_title('Fourier')
 
 # Axes for PSF Image
-axPSF = fig.add_axes([.05, .2, .35/winAspect, .35])
+axPSF = fig.add_axes([.05, .2, .35/figPlot.winAspect, .35])
 axPSF.axes.set_xticks([])
 axPSF.axes.set_yticks([])
 axPSF.set_title('PSF')
@@ -169,7 +169,7 @@ filtLog = np.log(np.maximum(np.abs(filtImg),1.))
 
 
 # Axes for Inverse After Image
-axAfter = fig.add_axes([.35, .6, .35/winAspect, .35])
+axAfter = fig.add_axes([.35, .6, .35/figPlot.winAspect, .35])
 axAfter.axes.set_xticks([])
 axAfter.axes.set_yticks([])
 axAfter.set_title('After')
