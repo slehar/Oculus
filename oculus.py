@@ -123,41 +123,43 @@ class pltFig():
         plt.sca(self.axPSF)  # Set imgPSF the "current axes"
         self.psfPlot = plt.imshow(imgPSF, cmap='gray')
 
-        def modefunc(self, label):
-            if label == 'Disc':
-                psfMode = 'Disc'
-                imgPSF = (self.distImg < figPlot.radius)  # This is a Disc PSF
-                self.slider1.label = 'radius'
-            if label == 'Line':
-                figPlot.psfMode = 'Line'
-                figPlot.lineLength = figPlot.radius * 3.
-                imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
-                pilPSF = Image.fromarray(imgPSF, 'L')
-                self.slider1.label = 'length'
-                print self.slider1.label
-                draw = ImageDraw.Draw(pilPSF)
-                draw.line(((
-                    figPlot.lineLength * -np.cos(figPlot.lineOri) + self.hafX,
-                    figPlot.lineLength * -np.sin(figPlot.lineOri) + self.hafY,
-                    figPlot.lineLength * np.cos(figPlot.lineOri) + self.hafX,
-                    figPlot.lineLength * np.sin(figPlot.lineOri) + self.hafY)),
-                    fill=255, width=figPlot.lineWidth)
-                imgPSF = np.asarray(pilPSF) / 255.
-
-            if label == 'Blob':
-                figPlot.psfMode = 'Blob'
-                blobFig, blobAx = blob.openBlobWindow()
-                figPlot.fig.canvas.draw()
-                imgPSF = blob.returnBlobImage()
-
-            imgPSF = imgPSF.astype(float)
-            plt.show()
-            plt.pause(.001)
-            self.update()
-            plt.draw()
-        self.radio.on_clicked(modefunc)
+        self.radio.on_clicked(self.modefunc)
 
         self.fig.canvas.mpl_connect('key_press_event', self.press)
+
+    def modefunc(self, label):
+        if label == 'Disc':
+            psfMode = 'Disc'
+            imgPSF = (self.distImg < figPlot.radius)  # This is a Disc PSF
+            self.slider1.label = 'radius'
+        if label == 'Line':
+            figPlot.psfMode = 'Line'
+            figPlot.lineLength = figPlot.radius * 3.
+            imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
+            pilPSF = Image.fromarray(imgPSF, 'L')
+            self.slider1.label = 'length'
+            print self.slider1.label
+            draw = ImageDraw.Draw(pilPSF)
+            draw.line(((
+                figPlot.lineLength * -np.cos(figPlot.lineOri) + self.hafX,
+                figPlot.lineLength * -np.sin(figPlot.lineOri) + self.hafY,
+                figPlot.lineLength * np.cos(figPlot.lineOri) + self.hafX,
+                figPlot.lineLength * np.sin(figPlot.lineOri) + self.hafY)),
+                fill=255, width=figPlot.lineWidth)
+            imgPSF = np.asarray(pilPSF) / 255.
+
+        if label == 'Blob':
+            figPlot.psfMode = 'Blob'
+            blobFig, blobAx = blob.openBlobWindow()
+            figPlot.fig.canvas.draw()
+            imgPSF = blob.returnBlobImage()
+
+        imgPSF = imgPSF.astype(float)
+        plt.show()
+        plt.pause(.001)
+        self.update()
+        plt.draw()
+
 
     # Keypress 'q' to quit callback function
     def press(self, event):
