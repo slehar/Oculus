@@ -202,7 +202,7 @@ class pltFig():
         fourInv = np.fft.ifft2(fourIshft)
 
         #   make sure fourReal scales 0.to 1.0 for display
-        # fourInv = np.fft.ifftshift(fourInv)
+        fourInv = np.fft.ifftshift(fourInv)
         self.fourReal = np.real(fourInv)
         plt.sca(self.axAfter)
         invPlot = plt.imshow(self.fourReal, cmap='gray', vmin=0, vmax=1)
