@@ -37,7 +37,6 @@ class pltFig():
         self.winAspect = winXSize / winYSize
         self.fig = plt.figure(figsize=(winXSize, winYSize))  # Open the Fig
         self.fig.canvas.set_window_title('Oculus')
-        # self.fig.canvas.mpl_connect('key_press_event', self.press)
 
         # Axes for Images
         self.axBefore = utils.get_axes(self.fig, [.05, .6, .35 / self.winAspect, .35], 'Before')
@@ -111,7 +110,6 @@ class pltFig():
         fourInv = np.fft.ifftshift(fourInv)
         self.fourReal = np.real(fourInv)
 
-
         # Slider 1
         hafRadiusMax = min(self.ySize, self.xSize)  # Setting upper limit to radius focus blur
         self.slider1 = utils.get_slider(self.fig, [0.41, 0.5, 0.234, 0.04], 'radius', 0.5, hafRadiusMax / 10, valinit=5.)
@@ -155,63 +153,6 @@ class pltFig():
         plt.sca(self.axAfter)
         invPlot = plt.imshow(self.fourReal, cmap='gray')
 
-
-    def modefunc(self, label):
-        if label == 'Disc':
-            psfMode = 'Disc'
-            self.imgPSF = (self.distImg < self.radius)  # This is a Disc PSF
-            self.slider1.label = 'radius'
-        if label == 'Line':
-            self.psfMode = 'Line'
-            self.lineLength = self.radius * 3.
-            self.imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
-            pilPSF = Image.fromarray(self.imgPSF, 'L')
-            self.slider1.label = 'length'
-            print self.slider1.label
-            draw = ImageDraw.Draw(pilPSF)
-            draw.line(((
-                self.lineLength * -np.cos(self.lineOri) + self.hafX,
-                self.lineLength * -np.sin(self.lineOri) + self.hafY,
-                self.lineLength * np.cos(self.lineOri) + self.hafX,
-                self.lineLength * np.sin(self.lineOri) + self.hafY)),
-                fill=255, width=self.lineWidth)
-            imgPSF = np.asarray(pilPSF) / 255.
-
-        if label == 'Blob':
-            self.psfMode = 'Blob'
-            blobFig, blobAx = blob.openBlobWindow()
-            self.fig.canvas.draw()
-            imgPSF = blob.returnBlobImage()
-
-        self.imgPSF = self.imgPSF.astype(float)
-        plt.show()
-        plt.pause(.001)
-        self.update()
-        plt.draw()
-
-
-    # Keypress 'q' to quit callback function
-    def press(self, event):
-
-        if event.key == 'q':
-            plt.close()
-
-
-    def get_image(self):
-        ''' get_image '''
-
-        import Tkinter, tkFileDialog
-
-        # Get image using finder dialog
-        root = Tkinter.Tk()
-        root.withdraw()  # Hide the root window
-        imgFile = tkFileDialog.askopenfilename(title='Select Image',
-                                               initialdir=".",
-                                               initialfile='blr.png')
-
-        return imgFile
-
-
     def update(self):
         ''' Update display when sliders change '''
 
@@ -220,15 +161,15 @@ class pltFig():
             self.imgPSF = (self.distImg < self.radius)  # This is a Disc PSF
         elif self.psfMode == 'Line':
             self.lineLength = self.radius * 3.
-            imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
-            pilPSF = Image.fromarray(imgPSF, 'L')
+            self.imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
+            pilPSF = Image.fromarray(self.imgPSF, 'L')
             draw = ImageDraw.Draw(pilPSF)
             draw.line(((self.lineLength * -np.cos(self.lineOri) + self.hafX,
                         self.lineLength * -np.sin(self.lineOri) + self.hafY,
                         self.lineLength *  np.cos(self.lineOri) + self.hafX,
                         self.lineLength *  np.sin(self.lineOri) + self.hafY)),
                         fill=255, width=self.lineWidth)
-            imgPSF = np.asarray(pilPSF) / 255.
+            self.imgPSF = np.asarray(pilPSF) / 255.
         elif self.psfMode == 'Blob':
             imgPSF = blob.returnBlobImage()
 
@@ -266,8 +207,58 @@ class pltFig():
         fourInv = np.fft.ifftshift(fourInv)
         self.fourReal = np.real(fourInv)
 
+    def modefunc(self, label):
+        if label == 'Disc':
+            psfMode = 'Disc'
+            self.imgPSF = (self.distImg < self.radius)  # This is a Disc PSF
+            self.slider1.label = 'radius'
+        if label == 'Line':
+            self.psfMode = 'Line'
+            self.lineLength = self.radius * 3.
+            self.imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
+            pilPSF = Image.fromarray(self.imgPSF, 'L')
+            self.slider1.label = 'length'
+            print self.slider1.label
+            draw = ImageDraw.Draw(pilPSF)
+            draw.line(((
+                self.lineLength * -np.cos(self.lineOri) + self.hafX,
+                self.lineLength * -np.sin(self.lineOri) + self.hafY,
+                self.lineLength * np.cos(self.lineOri) + self.hafX,
+                self.lineLength * np.sin(self.lineOri) + self.hafY)),
+                fill=255, width=self.lineWidth)
+            imgPSF = np.asarray(pilPSF) / 255.
 
-    # %%
+        if label == 'Blob':
+            self.psfMode = 'Blob'
+            blobFig, blobAx = blob.openBlobWindow()
+            self.fig.canvas.draw()
+            imgPSF = blob.returnBlobImage()
+
+        self.imgPSF = self.imgPSF.astype(float)
+        plt.show()
+        plt.pause(.001)
+        self.update()
+        plt.draw()
+
+    def press(self, event):
+
+        if event.key == 'q':
+            plt.close()
+
+    def get_image(self):
+        ''' get_image '''
+
+        import Tkinter, tkFileDialog
+
+        # Get image using finder dialog
+        root = Tkinter.Tk()
+        root.withdraw()  # Hide the root window
+        imgFile = tkFileDialog.askopenfilename(title='Select Image',
+                                               initialdir=".",
+                                               initialfile='blr.png')
+
+        return imgFile
+
     def update1(self, val):
         figPlot.radius = self.slider1.val
         self.update()
@@ -286,18 +277,10 @@ class pltFig():
 
 figPlot = pltFig()
 
-#    fig.canvas.draw()
-# figPlot.slider1.on_changed(figPlot.update1)
-# figPlot.slider2.on_changed(figPlot.update2)
-# figPlot.slider3.on_changed(figPlot.update3)
-# figPlot.slider4.on_changed(figPlot.update4)
-
-
-
 figPlot.update()
 
 # Show [block = leave it open, don't close]
-plt.show(block=True)
-# plt.show()
+# plt.show(block=True)
+plt.show()
 
 
