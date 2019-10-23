@@ -12,12 +12,10 @@ matplotlib.use('TkAgg')
 
 import matplotlib.pyplot as plt
 from   matplotlib.widgets import RadioButtons
-# import Tkinter, tkFileDialog
 from   PIL import Image, ImageDraw
 import numpy as np
 import utils
 import blob
-# import utils
 
 class pltFig():
     ''' Plot Figure class '''
@@ -91,23 +89,50 @@ class pltFig():
         self.fourPlot = plt.imshow(fourLog.real, cmap='gray')
         # plt.pause(.001)
 
+        #### Fourier Filtering ####
+        distImg = np.sqrt(xx ** 2 + yy ** 2)
+        imgPSF = (distImg < self.radius)  # This is a Disc PSF
+        filtImg = self.fourShft * imgPSF
+        filtLog = np.log(np.maximum(np.abs(filtImg), 1.))
+
+        # Inverse Fourier Transform
+        fourIshft = np.fft.ifftshift(filtImg)
+        fourInv = np.fft.ifft2(fourIshft)
+        fourReal = np.real(fourInv)
+        plt.sca(self.axAfter)
+        invPlot = plt.imshow(fourReal, cmap='gray', vmin=0, vmax=1)
+
+        # Filter radius sliders
+
+        plt.sca(self.axDiag)
+        diagPlot = plt.imshow(imgHan, cmap='gray', vmin=0., vmax=1.)
+
+        #   make sure fourReal scales 0.to 1.0 for display
+        fourInv = np.fft.ifftshift(fourInv)
+        self.fourReal = np.real(fourInv)
+
+
         # Slider 1
         hafRadiusMax = min(self.ySize, self.xSize)  # Setting upper limit to radius focus blur
         self.slider1 = utils.get_slider(self.fig, [0.41, 0.5, 0.234, 0.04], 'radius', 0.5, hafRadiusMax / 10, valinit=5.)
         rad1 = np.log(self.slider1.val)  # make log control
         self.slider1.valtext.set_text(rad1)
+        self.slider1.on_changed(self.update1)
 
         # Slider 2
         self.slider2 = utils.get_slider(self.fig, [0.41, 0.4509, 0.234, 0.04], 'angle', -np.pi, np.pi, valinit=0.)
         self.lineOri = self.slider2.val
+        self.slider2.on_changed(self.update2)
 
         # Slider 3
         self.slider3 = utils.get_slider(self.fig, [0.41, 0.40, 0.234, 0.04], 'SNR', 1., 1000., valinit=100.)
         self.snr = self.slider3.val
+        self.slider3.on_changed(self.update3)
 
         # Slider 4
         self.slider4 = utils.get_slider(self.fig, [0.41, 0.35, 0.234, 0.04], 'linewidth', 1, 50, valinit=5)
         self.lineWidth = self.slider4.val
+        self.slider4.on_changed(self.update4)
 
         # Slider 5
         self.slider5 = utils.get_slider(self.fig, [0.41, 0.3, 0.234, 0.04], 'skew', 1, 50, valinit=0)
@@ -127,34 +152,38 @@ class pltFig():
 
         self.fig.canvas.mpl_connect('key_press_event', self.press)
 
+        plt.sca(self.axAfter)
+        invPlot = plt.imshow(self.fourReal, cmap='gray')
+
+
     def modefunc(self, label):
         if label == 'Disc':
             psfMode = 'Disc'
-            imgPSF = (self.distImg < figPlot.radius)  # This is a Disc PSF
+            self.imgPSF = (self.distImg < self.radius)  # This is a Disc PSF
             self.slider1.label = 'radius'
         if label == 'Line':
-            figPlot.psfMode = 'Line'
-            figPlot.lineLength = figPlot.radius * 3.
-            imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
-            pilPSF = Image.fromarray(imgPSF, 'L')
+            self.psfMode = 'Line'
+            self.lineLength = self.radius * 3.
+            self.imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
+            pilPSF = Image.fromarray(self.imgPSF, 'L')
             self.slider1.label = 'length'
             print self.slider1.label
             draw = ImageDraw.Draw(pilPSF)
             draw.line(((
-                figPlot.lineLength * -np.cos(figPlot.lineOri) + self.hafX,
-                figPlot.lineLength * -np.sin(figPlot.lineOri) + self.hafY,
-                figPlot.lineLength * np.cos(figPlot.lineOri) + self.hafX,
-                figPlot.lineLength * np.sin(figPlot.lineOri) + self.hafY)),
-                fill=255, width=figPlot.lineWidth)
+                self.lineLength * -np.cos(self.lineOri) + self.hafX,
+                self.lineLength * -np.sin(self.lineOri) + self.hafY,
+                self.lineLength * np.cos(self.lineOri) + self.hafX,
+                self.lineLength * np.sin(self.lineOri) + self.hafY)),
+                fill=255, width=self.lineWidth)
             imgPSF = np.asarray(pilPSF) / 255.
 
         if label == 'Blob':
-            figPlot.psfMode = 'Blob'
+            self.psfMode = 'Blob'
             blobFig, blobAx = blob.openBlobWindow()
-            figPlot.fig.canvas.draw()
+            self.fig.canvas.draw()
             imgPSF = blob.returnBlobImage()
 
-        imgPSF = imgPSF.astype(float)
+        self.imgPSF = self.imgPSF.astype(float)
         plt.show()
         plt.pause(.001)
         self.update()
@@ -164,14 +193,8 @@ class pltFig():
     # Keypress 'q' to quit callback function
     def press(self, event):
 
-        print 'Keypress detected'
         if event.key == 'q':
-            print "key is 'q'"
             plt.close()
-
-
-        # plt.sca(self.axAfter)
-        # invPlot = plt.imshow(fourReal, cmap='gray')
 
 
     def get_image(self):
@@ -189,28 +212,24 @@ class pltFig():
         return imgFile
 
 
-
-
-
-    #########################[ def update(): ]########################################
-    # This is loop where all the action happens
     def update(self):
+        ''' Update display when sliders change '''
 
         # PSF in axPSF
-        if figPlot.psfMode == 'Disc':
-            self.imgPSF = (self.distImg < figPlot.radius)  # This is a Disc PSF
-        elif figPlot.psfMode == 'Line':
-            figPlot.lineLength = figPlot.radius * 3.
+        if self.psfMode == 'Disc':
+            self.imgPSF = (self.distImg < self.radius)  # This is a Disc PSF
+        elif self.psfMode == 'Line':
+            self.lineLength = self.radius * 3.
             imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
             pilPSF = Image.fromarray(imgPSF, 'L')
             draw = ImageDraw.Draw(pilPSF)
-            draw.line(((figPlot.lineLength * -np.cos(figPlot.lineOri) + self.hafX,
-                        figPlot.lineLength * -np.sin(figPlot.lineOri) + self.hafY,
-                        figPlot.lineLength *  np.cos(figPlot.lineOri) + self.hafX,
-                        figPlot.lineLength *  np.sin(figPlot.lineOri) + self.hafY)),
-                        fill=255, width=figPlot.lineWidth)
+            draw.line(((self.lineLength * -np.cos(self.lineOri) + self.hafX,
+                        self.lineLength * -np.sin(self.lineOri) + self.hafY,
+                        self.lineLength *  np.cos(self.lineOri) + self.hafX,
+                        self.lineLength *  np.sin(self.lineOri) + self.hafY)),
+                        fill=255, width=self.lineWidth)
             imgPSF = np.asarray(pilPSF) / 255.
-        elif figPlot.psfMode == 'Blob':
+        elif self.psfMode == 'Blob':
             imgPSF = blob.returnBlobImage()
 
         realimgPSF = self.imgPSF.astype(float)
@@ -224,7 +243,7 @@ class pltFig():
         self.fourPlot.set_data(psfLog.real)
 
         # Create the Linear MAP filter, K(u,v)
-        isnr = 1. / figPlot.snr
+        isnr = 1. / self.snr
         # -------
         conjfourPSF = np.conj(fourPSF)
         K = (conjfourPSF + isnr) / ((conjfourPSF * fourPSF) + isnr)
@@ -245,16 +264,7 @@ class pltFig():
 
         #   make sure fourReal scales 0.to 1.0 for display
         fourInv = np.fft.ifftshift(fourInv)
-        fourReal = np.real(fourInv)
-
-        #    lmax=fourReal.max()
-        #    lmin=fourReal.min()
-
-        plt.sca(self.axAfter)
-        invPlot = plt.imshow(fourReal, cmap='gray')
-
-
-     # radio button callback function to switch PSF mode
+        self.fourReal = np.real(fourInv)
 
 
     # %%
@@ -262,30 +272,28 @@ class pltFig():
         figPlot.radius = self.slider1.val
         self.update()
 
-
     def update2(self, val):
         figPlot.lineOri = self.slider2.val
         self.update()
-
 
     def update3(self, val):
         figPlot.snr = self.slider3.val
         self.update()
 
-
     def update4(self, val):
         figPlot.lineWidth = int(self.slider4.val)
         self.update()
 
-
-        #    fig.canvas.draw()
-        self.slider1.on_changed(self.update1)
-        self.slider2.on_changed(self.update2)
-        self.slider3.on_changed(self.update3)
-        self.slider4.on_changed(self.update4)
-
-
 figPlot = pltFig()
+
+#    fig.canvas.draw()
+# figPlot.slider1.on_changed(figPlot.update1)
+# figPlot.slider2.on_changed(figPlot.update2)
+# figPlot.slider3.on_changed(figPlot.update3)
+# figPlot.slider4.on_changed(figPlot.update4)
+
+
+
 figPlot.update()
 
 # Show [block = leave it open, don't close]
