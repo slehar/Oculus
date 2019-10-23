@@ -8,11 +8,11 @@ Created on Wed Sep 28 16:36:45 2016
 """
 
 import matplotlib
-matplotlib.use('TkAgg')
-
+matplotlib.use('TkAgg')  # Bypass use('macos') default incompatible with PyCharm
 import matplotlib.pyplot as plt
 from   matplotlib.widgets import RadioButtons
 from   PIL import Image, ImageDraw
+import Tkinter, tkFileDialog
 import numpy as np
 import utils
 import blob
@@ -48,7 +48,6 @@ class pltFig():
         # Disc / Line / blob Checkbox
         self.rax = plt.axes([0.41, 0.1, 0.06 / self.winAspect, 0.1])
         self.radio = RadioButtons(self.rax, ['Disc', 'Line', 'Blob'])
-
 
         # Read image and display
         imgFile = self.get_image()
@@ -97,9 +96,9 @@ class pltFig():
         # Inverse Fourier Transform
         fourIshft = np.fft.ifftshift(filtImg)
         fourInv = np.fft.ifft2(fourIshft)
-        fourReal = np.real(fourInv)
+        self.fourReal = np.real(fourInv)
         plt.sca(self.axAfter)
-        invPlot = plt.imshow(fourReal, cmap='gray', vmin=0, vmax=1)
+        invPlot = plt.imshow(self.fourReal, cmap='gray', vmin=0, vmax=1)
 
         # Filter radius sliders
 
@@ -199,13 +198,14 @@ class pltFig():
 
         # Inverse Fourier Transform
         fourIshft = np.fft.ifftshift(fourResult)
-        fourIshft[0, 0] = 0.5 + 0.0j  # set d.c. term for display
-
+        # fourIshft[0, 0] = 0.5 + 0.0j  # set d.c. term for display
         fourInv = np.fft.ifft2(fourIshft)
 
         #   make sure fourReal scales 0.to 1.0 for display
-        fourInv = np.fft.ifftshift(fourInv)
+        # fourInv = np.fft.ifftshift(fourInv)
         self.fourReal = np.real(fourInv)
+        plt.sca(self.axAfter)
+        invPlot = plt.imshow(self.fourReal, cmap='gray', vmin=0, vmax=1)
 
     def modefunc(self, label):
         if label == 'Disc':
@@ -248,7 +248,6 @@ class pltFig():
     def get_image(self):
         ''' get_image '''
 
-        import Tkinter, tkFileDialog
 
         # Get image using finder dialog
         root = Tkinter.Tk()
@@ -277,7 +276,7 @@ class pltFig():
 
 figPlot = pltFig()
 
-figPlot.update()
+# figPlot.update()
 
 # Show [block = leave it open, don't close]
 # plt.show(block=True)
