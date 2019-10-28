@@ -49,28 +49,30 @@ class pltFig():
         self.rax = plt.axes([0.41, 0.1, 0.06 / self.winAspect, 0.1])
         self.radio = RadioButtons(self.rax, ['Disc', 'Line', 'Blob'])
 
-        # Read image and display
+        # Read Before image
         imgFile = self.get_image()
         imgPil = Image.open(imgFile).convert('LA')  # LA = 'luminance + alpha
         self.imgNp = np.array(imgPil.convert('L')) / 255.  # convert to L, luminance only
         self.ySize, self.xSize = self.imgNp.shape
         self.hafY, self.hafX = int(self.ySize / 2), int(self.xSize / 2)
 
+        # Convert to numpy array
         imgNp = utils.resize_even_dim(self.imgNp)
         self.ySize, self.xSize = imgNp.shape
 
         # Display input image
         plt.sca(self.axBefore)
         self.imgplot = plt.imshow(imgNp, cmap='gray')
+        # plt.pause(1.)
 
         # First Pass Hanning
         han = np.outer(np.hanning(self.ySize), np.hanning(self.xSize))
         imgHan = self.imgNp * han  # apply hanning window
-        totalpixels = self.xSize * self.ySize
 
         # Display hanning image
-        plt.sca(self.axBefore)
-        self.imgplot = plt.imshow(imgHan, cmap='gray')
+        # plt.sca(self.axBefore)
+        self.imgplot.set_data(imgHan)
+        # plt.show()
 
         # Generate PSF image
         K = np.zeros(self.imgNp.shape)  # array for inverse filter
@@ -100,7 +102,6 @@ class pltFig():
         psfLog = psfLog / complex(psfLog.max())
 
         # Display PSF transform image
-        plt.sca(self.axPSF)
         self.fourPlot.set_data(psfLog.real)
 
         # Create the Linear MAP filter, K(u,v)
@@ -112,7 +113,7 @@ class pltFig():
 
         # Display KLog image
         plt.sca(self.axDiag)
-        diagPlot = plt.imshow(KLog.real, cmap='gray')
+        self.diagPlot = plt.imshow(KLog.real, cmap='gray')
 
         # do the inverse filtering
         fourResult = self.fourShft * K  # convolution in the fourier domain
@@ -297,6 +298,6 @@ class pltFig():
 
 figPlot = pltFig()
 
-plt.show()
+plt.show(block=True)
 
 
