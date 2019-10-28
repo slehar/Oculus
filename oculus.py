@@ -68,9 +68,7 @@ class pltFig():
         plt.sca(self.axBefore)
         self.imgplot = plt.imshow(imgHan, cmap='gray')
 
-        # plt.sca(self.axDiag)
-        # self.imgplot = plt.imshow(self.imgNp, cmap='gray')
-
+        # Generate PSF image
         K = np.zeros(self.imgNp.shape)  # array for inverse filter
         yy, xx = np.mgrid[-self.hafY:self.hafY, -self.hafX:self.hafX]
         self.distImg = np.sqrt(xx ** 2 + yy ** 2)
@@ -91,14 +89,14 @@ class pltFig():
         plt.sca(self.axFour)
         self.fourPlot = plt.imshow(fourLog.real, cmap='gray')
 
-        # take transform of psf
+        # take transform of PSF
         fourPSF = np.fft.fft2(imgPSF)
         fourShftPSF = np.fft.fftshift(fourPSF)
         psfLog = np.log(np.maximum(np.abs(fourShftPSF), 1.))
         psfLog = psfLog / complex(psfLog.max())
 
         # Display PSF transform image
-        # fourPlot.set_data(psfLog.real)
+        plt.sca(self.axPSF)
         self.fourPlot = plt.imshow(psfLog.real)
 
         # Create the Linear MAP filter, K(u,v)
@@ -120,9 +118,10 @@ class pltFig():
         fourIshft[0, 0] = 0.5 + 0.0j  # set d.c. term for display
         self.fourInv = np.fft.ifft2(fourIshft)
 
-        #   make sure fourReal scales 0.to 1.0 for display
+        #   Swap quadrants
         self.fourInv = np.fft.ifftshift(self.fourInv)
 
+        # Display After image
         plt.sca(self.axAfter)
         self.invPlot = plt.imshow(self.fourInv.real, cmap='gray')
 
@@ -187,17 +186,17 @@ class pltFig():
                         fill=255, width=self.lineWidth)
             self.imgPSF = np.asarray(pilPSF) / 255.
         elif self.psfMode == 'Blob':
-            imgPSF = blob.returnBlobImage()
+            self.imgPSF = blob.returnBlobImage()
 
         realimgPSF = self.imgPSF.astype(float)
         self.psfPlot.set_data(realimgPSF)
 
-        # take transform of psf and displaying it
+        # take transform of psf and display it
         fourPSF = np.fft.fft2(self.imgPSF)
         self.fourShftPSF = np.fft.fftshift(fourPSF)
         psfLog = np.log(np.maximum(np.abs(self.fourShftPSF), 1.))
         psfLog = psfLog / complex(psfLog.max())
-        self.fourPlot.set_data(psfLog.real)
+        # self.fourPlot.set_data(psfLog.real)
 
         # Create the Linear MAP filter, K(u,v)
         isnr = 1. / self.snr
@@ -210,6 +209,10 @@ class pltFig():
         self.diagPlot.set_data(KLog.real)  # Plotting diag data
         norm = np.sum(K)  # for normalizing K
 
+        # Display filtered Fourier image
+        # plt.sca(self.axFour)
+        self.fourPlot.set_data(psfLog.real)
+
         # do the inverse filtering
         fourResult = self.fourShft * K  # convolution in the fourier domain
 
@@ -218,10 +221,8 @@ class pltFig():
         fourIshft[0, 0] = 0.5 + 0.0j  # set d.c. term for display
         self.fourInv = np.fft.ifft2(fourIshft)
 
-        #   make sure fourReal scales 0.to 1.0 for display
+        # Swap quadrants
         self.fourInv = np.fft.ifftshift(self.fourInv)
-        # self.fourReal = np.real(fourInv)
-        plt.sca(self.axAfter)
         self.invPlot.set_data(self.fourInv.real)
 
 
@@ -229,7 +230,7 @@ class pltFig():
 
     def modefunc(self, label):
         if label == 'Disc':
-            psfMode = 'Disc'
+            self.psfMode = 'Disc'
             self.imgPSF = (self.distImg < self.radius)  # This is a Disc PSF
             self.slider1.label = 'radius'
         if label == 'Line':
@@ -246,7 +247,7 @@ class pltFig():
                 self.lineLength * np.cos(self.lineOri) + self.hafX,
                 self.lineLength * np.sin(self.lineOri) + self.hafY)),
                 fill=255, width=self.lineWidth)
-            imgPSF = np.asarray(pilPSF) / 255.
+            self.imgPSF = np.asarray(pilPSF) / 255.
 
         if label == 'Blob':
             self.psfMode = 'Blob'
@@ -255,8 +256,6 @@ class pltFig():
             imgPSF = blob.returnBlobImage()
 
         self.imgPSF = self.imgPSF.astype(float)
-        plt.show()
-        plt.pause(.001)
         self.update()
         plt.draw()
 
