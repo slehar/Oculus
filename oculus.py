@@ -64,17 +64,21 @@ class pltFig():
         imgHan = self.imgNp * han  # apply hanning window
         totalpixels = self.xSize * self.ySize
 
-        plt.sca(self.axDiag)
-        imgplot = plt.imshow(self.imgNp, cmap='gray')
-        x, y = self.hafX, self.hafY
+        # Display hanning image
+        plt.sca(self.axBefore)
+        self.imgplot = plt.imshow(imgHan, cmap='gray')
+
+        # plt.sca(self.axDiag)
+        # self.imgplot = plt.imshow(self.imgNp, cmap='gray')
 
         K = np.zeros(self.imgNp.shape)  # array for inverse filter
         yy, xx = np.mgrid[-self.hafY:self.hafY, -self.hafX:self.hafX]
         self.distImg = np.sqrt(xx ** 2 + yy ** 2)
         imgPSF = (self.distImg < self.radius)  # This is a Disc PSF
 
+        # Display PSF image
+        plt.sca(self.axPSF)
         self.psfPlot = plt.imshow(imgPSF, cmap='gray')
-        plt.sca(self.axFour)
 
         # Fourier Transform
         fourImg = np.fft.fft2(imgHan)  # set dc term to 1 to control contrast
@@ -83,31 +87,44 @@ class pltFig():
         fourLog = np.log(np.abs(self.fourShft))
         fourLog = fourLog / complex(fourLog.max())
 
+        # Display Fourier image
         plt.sca(self.axFour)
         self.fourPlot = plt.imshow(fourLog.real, cmap='gray')
-        # plt.pause(.001)
 
-        #### Fourier Filtering ####
-        distImg = np.sqrt(xx ** 2 + yy ** 2)
-        imgPSF = (distImg < self.radius)  # This is a Disc PSF
-        filtImg = self.fourShft * imgPSF
-        filtLog = np.log(np.maximum(np.abs(filtImg), 1.))
+        # take transform of psf
+        fourPSF = np.fft.fft2(imgPSF)
+        fourShftPSF = np.fft.fftshift(fourPSF)
+        psfLog = np.log(np.maximum(np.abs(fourShftPSF), 1.))
+        psfLog = psfLog / complex(psfLog.max())
+
+        # Display PSF transform image
+        # fourPlot.set_data(psfLog.real)
+        self.fourPlot = plt.imshow(psfLog.real)
+
+        # Create the Linear MAP filter, K(u,v)
+        isnr = 1. / self.snr
+        conjfourPSF = np.conj(fourPSF)
+        K = (conjfourPSF + isnr) / ((conjfourPSF * fourPSF) + isnr)
+        KLog = np.log(np.maximum(np.abs(K), 1.))
+        KLog = KLog / complex(KLog.max())  # normalizing 0 to 1
+
+        # Display KLog image
+        plt.sca(self.axDiag)
+        diagPlot = plt.imshow(KLog.real, cmap='gray')
+
+        # do the inverse filtering
+        fourResult = self.fourShft * K  # convolution in the fourier domain
 
         # Inverse Fourier Transform
-        fourIshft = np.fft.ifftshift(filtImg)
-        fourInv = np.fft.ifft2(fourIshft)
-        self.fourReal = np.real(fourInv)
-        plt.sca(self.axAfter)
-        invPlot = plt.imshow(self.fourReal, cmap='gray', vmin=0, vmax=1)
-
-        # Filter radius sliders
-
-        plt.sca(self.axDiag)
-        diagPlot = plt.imshow(imgHan, cmap='gray', vmin=0., vmax=1.)
+        fourIshft = np.fft.ifftshift(fourResult)
+        fourIshft[0, 0] = 0.5 + 0.0j  # set d.c. term for display
+        self.fourInv = np.fft.ifft2(fourIshft)
 
         #   make sure fourReal scales 0.to 1.0 for display
-        fourInv = np.fft.ifftshift(fourInv)
-        self.fourReal = np.real(fourInv)
+        self.fourInv = np.fft.ifftshift(self.fourInv)
+
+        plt.sca(self.axAfter)
+        self.invPlot = plt.imshow(self.fourInv.real, cmap='gray')
 
         # Slider 1
         hafRadiusMax = min(self.ySize, self.xSize)  # Setting upper limit to radius focus blur
@@ -149,8 +166,8 @@ class pltFig():
 
         self.fig.canvas.mpl_connect('key_press_event', self.press)
 
-        plt.sca(self.axAfter)
-        invPlot = plt.imshow(self.fourReal, cmap='gray')
+        # plt.sca(self.axAfter)
+        # invPlot = plt.imshow(self.fourReal, cmap='gray')
 
     def update(self):
         ''' Update display when sliders change '''
@@ -198,14 +215,17 @@ class pltFig():
 
         # Inverse Fourier Transform
         fourIshft = np.fft.ifftshift(fourResult)
-        # fourIshft[0, 0] = 0.5 + 0.0j  # set d.c. term for display
-        fourInv = np.fft.ifft2(fourIshft)
+        fourIshft[0, 0] = 0.5 + 0.0j  # set d.c. term for display
+        self.fourInv = np.fft.ifft2(fourIshft)
 
         #   make sure fourReal scales 0.to 1.0 for display
-        # fourInv = np.fft.ifftshift(fourInv)
-        self.fourReal = np.real(fourInv)
+        self.fourInv = np.fft.ifftshift(self.fourInv)
+        # self.fourReal = np.real(fourInv)
         plt.sca(self.axAfter)
-        invPlot = plt.imshow(self.fourReal, cmap='gray', vmin=0, vmax=1)
+        self.invPlot.set_data(self.fourInv.real)
+
+
+
 
     def modefunc(self, label):
         if label == 'Disc':
@@ -276,10 +296,6 @@ class pltFig():
 
 figPlot = pltFig()
 
-# figPlot.update()
-
-# Show [block = leave it open, don't close]
-# plt.show(block=True)
 plt.show()
 
 
