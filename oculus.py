@@ -59,6 +59,10 @@ class pltFig():
         imgNp = utils.resize_even_dim(self.imgNp)
         self.ySize, self.xSize = imgNp.shape
 
+        # Display input image
+        plt.sca(self.axBefore)
+        self.imgplot = plt.imshow(imgNp, cmap='gray')
+
         # First Pass Hanning
         han = np.outer(np.hanning(self.ySize), np.hanning(self.xSize))
         imgHan = self.imgNp * han  # apply hanning window
@@ -97,7 +101,7 @@ class pltFig():
 
         # Display PSF transform image
         plt.sca(self.axPSF)
-        self.fourPlot = plt.imshow(psfLog.real)
+        self.fourPlot.set_data(psfLog.real)
 
         # Create the Linear MAP filter, K(u,v)
         isnr = 1. / self.snr
@@ -165,8 +169,6 @@ class pltFig():
 
         self.fig.canvas.mpl_connect('key_press_event', self.press)
 
-        # plt.sca(self.axAfter)
-        # invPlot = plt.imshow(self.fourReal, cmap='gray')
 
     def update(self):
         ''' Update display when sliders change '''
