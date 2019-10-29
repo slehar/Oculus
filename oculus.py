@@ -32,8 +32,8 @@ class pltFig():
     def __init__(self):
 
         # Open figure window
-        winXSize = 15  # approx inches
-        winYSize = 8   # in width & height
+        winXSize = 15.  # approx inches
+        winYSize = 8.   # in width & height
         self.winAspect = winXSize / winYSize
         self.fig = plt.figure(figsize=(winXSize, winYSize))  # Open the Fig
         self.fig.canvas.set_window_title('Oculus')
@@ -70,10 +70,7 @@ class pltFig():
         self.imgHan = self.imgNp * han  # apply hanning window
 
         # Display hanning image
-        # plt.sca(self.axBefore)
-        # plt.ion()
         self.beforePlot.set_data(self.imgHan)
-        # plt.show()
 
         # Generate PSF image
         K = np.zeros(self.imgNp.shape)  # array for inverse filter
@@ -157,10 +154,8 @@ class pltFig():
         self.slider5 = utils.get_slider(self.fig, [0.41, 0.3, 0.234, 0.04], 'skew', 1, 50, valinit=0)
         skew = self.slider5.val
 
-        # plt.sca(self.axBefore)
         self.beforePlot.set_data(self.imgHan)
 
-        # plt.sca(self.axDiag)
         self.diagPlot.set_data(self.imgHan)
 
         imgPSF = imgPSF.astype(float)
