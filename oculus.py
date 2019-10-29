@@ -157,10 +157,10 @@ class pltFig():
         self.slider5 = utils.get_slider(self.fig, [0.41, 0.3, 0.234, 0.04], 'skew', 1, 50, valinit=0)
         skew = self.slider5.val
 
-        plt.sca(self.axBefore)
-        self.beforePlot.set_data(self.imgNp)
+        # plt.sca(self.axBefore)
+        self.beforePlot.set_data(self.imgHan)
 
-        plt.sca(self.axDiag)
+        # plt.sca(self.axDiag)
         self.diagPlot.set_data(self.imgHan)
 
         imgPSF = imgPSF.astype(float)
@@ -295,6 +295,7 @@ class pltFig():
 
 figPlot = pltFig()
 
-plt.show(block=True)
+# plt.show(block=True)
+plt.show()
 
 
