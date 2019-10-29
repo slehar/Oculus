@@ -47,7 +47,7 @@ class pltFig():
 
         # Disc / Line / blob Checkbox
         self.rax = plt.axes([0.41, 0.1, 0.15 / self.winAspect, 0.15])
-        self.radio = RadioButtons(self.rax, ['Disc', 'Line', 'Blob'])
+        self.radio = RadioButtons(self.rax, ['Disc', 'Line', 'Paragram'])
 
         # Read Before image
         imgFile = self.get_image()
@@ -152,7 +152,7 @@ class pltFig():
 
         # Slider 5
         self.slider5 = utils.get_slider(self.fig, [0.35, 0.3, 0.234, 0.04], 'skew', 1, 50, valinit=0)
-        skew = self.slider5.val
+        self.skew = self.slider5.val
 
         self.beforePlot.set_data(self.imgHan)
 
@@ -169,22 +169,32 @@ class pltFig():
     def update(self):
         ''' Update display when sliders change '''
 
+        linelen = self.lineLength
+        lineori = self.lineOri
+        radius  = self.radius
+        hafx, hafy = self.hafX, self.hafY
+
         # PSF in axPSF
         if self.psfMode == 'Disc':
-            self.imgPSF = (self.distImg < self.radius)  # This is a Disc PSF
+            self.imgPSF = (self.distImg < radius)  # This is a Disc PSF
         elif self.psfMode == 'Line':
-            self.lineLength = self.radius * 3.
-            self.imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
+            self.lineLength = radius * 3.
+            self.imgPSF = np.zeros([2 * hafy, 2 * hafx])
             pilPSF = Image.fromarray(self.imgPSF, 'L')
             draw = ImageDraw.Draw(pilPSF)
-            draw.line(((self.lineLength * -np.cos(self.lineOri) + self.hafX,
-                        self.lineLength * -np.sin(self.lineOri) + self.hafY,
-                        self.lineLength *  np.cos(self.lineOri) + self.hafX,
-                        self.lineLength *  np.sin(self.lineOri) + self.hafY)),
+            draw.line(((linelen * -np.cos(lineori) + hafx,
+                        linelen * -np.sin(lineori) + hafy,
+                        linelen *  np.cos(lineori) + hafx,
+                        linelen *  np.sin(lineori) + hafy)),
                         fill=255, width=self.lineWidth)
             self.imgPSF = np.asarray(pilPSF) / 255.
-        elif self.psfMode == 'Blob':
-            self.imgPSF = blob.returnBlobImage()
+        elif self.psfMode == 'Paragram':
+            self.imgPSF = np.zeros([2 * hafy, 2 * hafx])
+            pilPSF = Image.fromarray(self.imgPSF, 'L')
+            draw = ImageDraw.Draw(pilPSF)
+            # draw.polygon( xy, fill, outline )
+
+            # self.imgPSF = blob.returnBlobImage()
 
         realimgPSF = self.imgPSF.astype(float)
         self.psfPlot.set_data(realimgPSF)
