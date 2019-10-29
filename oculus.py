@@ -27,7 +27,8 @@ class pltFig():
     psfMode = 'Disc'
     lineOri = 0.
     lineLength = 100.
-    lineWidth = 5
+    lineWidth = 5.
+    lineSkew = 0.
 
     def __init__(self):
 
@@ -45,7 +46,7 @@ class pltFig():
         self.axAfter  = utils.get_axes(self.fig, [.35, .6, .35 / self.winAspect, .35], 'After')
         self.axDiag   = utils.get_axes(self.fig, [.65, .2, .35 / self.winAspect, .35], 'Diagnostic')
 
-        # Disc / Line / blob Checkbox
+        # Disc / Line / Paragram Checkbox
         self.rax = plt.axes([0.41, 0.1, 0.15 / self.winAspect, 0.15])
         self.radio = RadioButtons(self.rax, ['Disc', 'Line', 'Paragram'])
 
@@ -151,8 +152,9 @@ class pltFig():
         self.slider4.on_changed(self.update4)
 
         # Slider 5
-        self.slider5 = utils.get_slider(self.fig, [0.35, 0.3, 0.234, 0.04], 'skew', 1, 50, valinit=0)
-        self.skew = self.slider5.val
+        self.slider5 = utils.get_slider(self.fig, [0.35, 0.3, 0.234, 0.04], 'skew',  -np.pi, np.pi, valinit=0)
+        self.lineSkew = self.slider5.val
+        self.slider5.on_changed(self.update5)
 
         self.beforePlot.set_data(self.imgHan)
 
@@ -170,7 +172,9 @@ class pltFig():
         ''' Update display when sliders change '''
 
         linelen = self.lineLength
+        linewidth = self.lineWidth
         lineori = self.lineOri
+        skew    = self.lineSkew
         radius  = self.radius
         hafx, hafy = self.hafX, self.hafY
 
@@ -180,19 +184,29 @@ class pltFig():
         elif self.psfMode == 'Line':
             self.lineLength = radius * 3.
             self.imgPSF = np.zeros([2 * hafy, 2 * hafx])
-            pilPSF = Image.fromarray(self.imgPSF, 'L')
-            draw = ImageDraw.Draw(pilPSF)
+            self.pilPSF = Image.fromarray(self.imgPSF, 'L')
+            draw = ImageDraw.Draw(self.pilPSF)
             draw.line(((linelen * -np.cos(lineori) + hafx,
                         linelen * -np.sin(lineori) + hafy,
                         linelen *  np.cos(lineori) + hafx,
                         linelen *  np.sin(lineori) + hafy)),
                         fill=255, width=self.lineWidth)
-            self.imgPSF = np.asarray(pilPSF) / 255.
+            self.imgPSF = np.asarray(self.pilPSF) / 255.
         elif self.psfMode == 'Paragram':
             self.imgPSF = np.zeros([2 * hafy, 2 * hafx])
-            pilPSF = Image.fromarray(self.imgPSF, 'L')
-            draw = ImageDraw.Draw(pilPSF)
-            # draw.polygon( xy, fill, outline )
+            self.pilPSF = Image.fromarray(self.imgPSF, 'L')
+            draw = ImageDraw.Draw(self.pilPSF)
+
+            draw.polygon(((linelen * -np.cos(lineori) - linewidth * np.sin(skew) + hafx,
+                           linelen * -np.sin(lineori) - linewidth * np.cos(skew) + hafy),
+                          (linelen * -np.cos(lineori) + linewidth * np.sin(skew) + hafx,
+                           linelen * -np.sin(lineori) + linewidth * np.cos(skew) + hafy),
+                          (linelen *  np.cos(lineori) + linewidth * np.cos(skew) + hafx,
+                           linelen *  np.sin(lineori) - linewidth * np.sin(skew) + hafy),
+                          (linelen *  np.cos(lineori) + linewidth * np.sin(skew) + hafx,
+                           linelen *  np.sin(lineori) - linewidth * np.cos(skew) + hafy)), fill=255)
+            self.imgPSF = np.asarray(self.pilPSF) / 255.
+
 
             # self.imgPSF = blob.returnBlobImage()
 
@@ -254,13 +268,16 @@ class pltFig():
                 fill=255, width=self.lineWidth)
             self.imgPSF = np.asarray(pilPSF) / 255.
 
-        if label == 'Blob':
-            self.psfMode = 'Blob'
-            blobFig, blobAx = blob.openBlobWindow()
-            self.fig.canvas.draw()
-            self.imgPSF = blob.returnBlobImage()
+        if label == 'Paragram':
+            self.psfMode = 'Paragram'
+            # blobFig, blobAx = blob.openBlobWindow()
+            # self.fig.canvas.draw()
+            # self.imgPSF = blob.returnBlobImage()
 
-        self.imgPSF = self.imgPSF.astype(float)
+            self.imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
+            self.imgPSF = self.imgPSF.astype(float)
+
+
         self.update()
         plt.draw()
 
@@ -298,9 +315,14 @@ class pltFig():
         figPlot.lineWidth = int(self.slider4.val)
         self.update()
 
+
+    def update5(self, val):
+        figPlot.lineSkew = int(self.slider5.val)
+        self.update()
+
+
 figPlot = pltFig()
 
-# plt.show(block=True)
 plt.show()
 
 
