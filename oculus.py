@@ -57,21 +57,22 @@ class pltFig():
         self.hafY, self.hafX = int(self.ySize / 2), int(self.xSize / 2)
 
         # Convert to numpy array
-        imgNp = utils.resize_even_dim(self.imgNp)
-        self.ySize, self.xSize = imgNp.shape
+        self.imgNp = utils.resize_even_dim(self.imgNp)
+        self.ySize, self.xSize = self.imgNp.shape
 
-        # Display input image
+        # Display before image
         plt.sca(self.axBefore)
-        self.imgplot = plt.imshow(imgNp, cmap='gray')
-        # plt.pause(1.)
+        self.beforePlot = plt.imshow(self.imgNp, cmap='gray')
+        plt.pause(1.)
 
         # First Pass Hanning
         han = np.outer(np.hanning(self.ySize), np.hanning(self.xSize))
-        imgHan = self.imgNp * han  # apply hanning window
+        self.imgHan = self.imgNp * han  # apply hanning window
 
         # Display hanning image
         # plt.sca(self.axBefore)
-        self.imgplot.set_data(imgHan)
+        # plt.ion()
+        self.beforePlot.set_data(self.imgHan)
         # plt.show()
 
         # Generate PSF image
@@ -85,7 +86,7 @@ class pltFig():
         self.psfPlot = plt.imshow(imgPSF, cmap='gray')
 
         # Fourier Transform
-        fourImg = np.fft.fft2(imgHan)  # set dc term to 1 to control contrast
+        fourImg = np.fft.fft2(self.imgHan)  # set dc term to 1 to control contrast
         fourImg[0, 0] = 1.0 + 0j
         self.fourShft = np.fft.fftshift(fourImg)
         fourLog = np.log(np.abs(self.fourShft))
@@ -157,14 +158,13 @@ class pltFig():
         skew = self.slider5.val
 
         plt.sca(self.axBefore)
-        beforePlot = plt.imshow(imgNp, cmap='gray', vmin=0., vmax=1.)
+        self.beforePlot.set_data(self.imgNp)
 
         plt.sca(self.axDiag)
-        self.diagPlot = plt.imshow(imgHan, cmap='gray', vmin=0., vmax=1.)
+        self.diagPlot.set_data(self.imgHan)
 
         imgPSF = imgPSF.astype(float)
-        plt.sca(self.axPSF)  # Set imgPSF the "current axes"
-        self.psfPlot = plt.imshow(imgPSF, cmap='gray')
+        self.psfPlot.set_data(imgPSF)
 
         self.radio.on_clicked(self.modefunc)
 
@@ -199,11 +199,9 @@ class pltFig():
         self.fourShftPSF = np.fft.fftshift(fourPSF)
         psfLog = np.log(np.maximum(np.abs(self.fourShftPSF), 1.))
         psfLog = psfLog / complex(psfLog.max())
-        # self.fourPlot.set_data(psfLog.real)
 
         # Create the Linear MAP filter, K(u,v)
         isnr = 1. / self.snr
-        # -------
         conjfourPSF = np.conj(fourPSF)
         K = (conjfourPSF + isnr) / ((conjfourPSF * fourPSF) + isnr)
         #    print K[hafY:hafY+1,hafX:hafX+1]    #is this the d.c. term?
@@ -213,7 +211,6 @@ class pltFig():
         norm = np.sum(K)  # for normalizing K
 
         # Display filtered Fourier image
-        # plt.sca(self.axFour)
         self.fourPlot.set_data(psfLog.real)
 
         # do the inverse filtering
@@ -256,7 +253,7 @@ class pltFig():
             self.psfMode = 'Blob'
             blobFig, blobAx = blob.openBlobWindow()
             self.fig.canvas.draw()
-            imgPSF = blob.returnBlobImage()
+            self.imgPSF = blob.returnBlobImage()
 
         self.imgPSF = self.imgPSF.astype(float)
         self.update()

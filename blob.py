@@ -889,11 +889,3 @@ def returnBlobImage():
 if __name__ == '__main__':
     openBlobWindow()
     
-#ax.axis('equal')
-
-# Gef fig manager to raise window in top left corner (10,10)
-#figmgr=plt.get_current_fig_manager()
-#figmgr.canvas.manager.window.raise_()
-#geom=figmgr.window.geometry()
-#(xLoc,yLoc,dxWidth,dyHeight)=geom.getRect()
-#figmgr.window.setGeometry(10,10,dxWidth,dyHeight)
