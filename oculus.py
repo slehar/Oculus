@@ -89,12 +89,12 @@ class pltFig():
         fourImg = np.fft.fft2(self.imgHan)  # set dc term to 1 to control contrast
         fourImg[0, 0] = 1.0 + 0j
         self.fourShft = np.fft.fftshift(fourImg)
-        fourLog = np.log(np.abs(self.fourShft))
-        fourLog = fourLog / complex(fourLog.max())
+        self.fourLog = np.log(np.abs(self.fourShft))
+        self.fourLog = self.fourLog / complex(self.fourLog.max())
 
         # Display Fourier image
         plt.sca(self.axFour)
-        self.fourPlot = plt.imshow(fourLog.real, cmap='gray')
+        self.fourPlot = plt.imshow(self.fourLog.real, cmap='gray')
 
         # take transform of PSF
         fourPSF = np.fft.fft2(imgPSF)
@@ -103,7 +103,7 @@ class pltFig():
         psfLog = psfLog / complex(psfLog.max())
 
         # Display PSF transform image
-        self.fourPlot.set_data(psfLog.real)
+        # self.fourPlot.set_data(psfLog.real)
 
         # Create the Linear MAP filter, K(u,v)
         isnr = 1. / self.snr
@@ -211,7 +211,7 @@ class pltFig():
         norm = np.sum(K)  # for normalizing K
 
         # Display filtered Fourier image
-        self.fourPlot.set_data(psfLog.real)
+        self.fourPlot.set_data(self.fourLog.real)
 
         # do the inverse filtering
         fourResult = self.fourShft * K  # convolution in the fourier domain
