@@ -46,7 +46,7 @@ class pltFig():
         self.axDiag   = utils.get_axes(self.fig, [.65, .2, .35 / self.winAspect, .35], 'Diagnostic')
 
         # Disc / Line / blob Checkbox
-        self.rax = plt.axes([0.41, 0.1, 0.06 / self.winAspect, 0.1])
+        self.rax = plt.axes([0.41, 0.1, 0.15 / self.winAspect, 0.15])
         self.radio = RadioButtons(self.rax, ['Disc', 'Line', 'Blob'])
 
         # Read Before image
@@ -130,28 +130,28 @@ class pltFig():
 
         # Slider 1
         hafRadiusMax = min(self.ySize, self.xSize)  # Setting upper limit to radius focus blur
-        self.slider1 = utils.get_slider(self.fig, [0.41, 0.5, 0.234, 0.04], 'radius', 0.5, hafRadiusMax / 10, valinit=5.)
+        self.slider1 = utils.get_slider(self.fig, [0.35, 0.5, 0.234, 0.04], 'radius', 0.5, hafRadiusMax / 10, valinit=5.)
         rad1 = np.log(self.slider1.val)  # make log control
         self.slider1.valtext.set_text(rad1)
         self.slider1.on_changed(self.update1)
 
         # Slider 2
-        self.slider2 = utils.get_slider(self.fig, [0.41, 0.4509, 0.234, 0.04], 'angle', -np.pi, np.pi, valinit=0.)
+        self.slider2 = utils.get_slider(self.fig, [0.35, 0.4509, 0.234, 0.04], 'angle', -np.pi, np.pi, valinit=0.)
         self.lineOri = self.slider2.val
         self.slider2.on_changed(self.update2)
 
         # Slider 3
-        self.slider3 = utils.get_slider(self.fig, [0.41, 0.40, 0.234, 0.04], 'SNR', 1., 1000., valinit=100.)
+        self.slider3 = utils.get_slider(self.fig, [0.35, 0.40, 0.234, 0.04], 'SNR', 1., 1000., valinit=100.)
         self.snr = self.slider3.val
         self.slider3.on_changed(self.update3)
 
         # Slider 4
-        self.slider4 = utils.get_slider(self.fig, [0.41, 0.35, 0.234, 0.04], 'linewidth', 1, 50, valinit=5)
+        self.slider4 = utils.get_slider(self.fig, [0.35, 0.35, 0.234, 0.04], 'linewidth', 1, 50, valinit=5)
         self.lineWidth = self.slider4.val
         self.slider4.on_changed(self.update4)
 
         # Slider 5
-        self.slider5 = utils.get_slider(self.fig, [0.41, 0.3, 0.234, 0.04], 'skew', 1, 50, valinit=0)
+        self.slider5 = utils.get_slider(self.fig, [0.35, 0.3, 0.234, 0.04], 'skew', 1, 50, valinit=0)
         skew = self.slider5.val
 
         self.beforePlot.set_data(self.imgHan)
