@@ -40,11 +40,11 @@ class pltFig():
         self.fig.canvas.set_window_title('Oculus')
 
         # Axes for Images
-        self.axBefore = utils.get_axes(self.fig, [.05, .6, .35 / self.winAspect, .35], 'Before')
-        self.axFour   = utils.get_axes(self.fig, [.65, .6, .35 / self.winAspect, .35], 'Fourier')
-        self.axPSF    = utils.get_axes(self.fig, [.05, .2, .35 / self.winAspect, .35], 'PSF')
-        self.axAfter  = utils.get_axes(self.fig, [.35, .6, .35 / self.winAspect, .35], 'After')
-        self.axDiag   = utils.get_axes(self.fig, [.65, .2, .35 / self.winAspect, .35], 'Diagnostic')
+        self.axBefore = utils.get_axes(self.fig, [.05, .6, .36 / self.winAspect, .36], 'Before')
+        self.axFour   = utils.get_axes(self.fig, [.65, .6, .36 / self.winAspect, .36], 'Fourier')
+        self.axPSF    = utils.get_axes(self.fig, [.05, .2, .36 / self.winAspect, .36], 'PSF')
+        self.axAfter  = utils.get_axes(self.fig, [.35, .6, .36 / self.winAspect, .36], 'After')
+        self.axDiag   = utils.get_axes(self.fig, [.65, .2, .36 / self.winAspect, .36], 'Diagnostic')
 
         # Disc / Line / Paragram Checkbox
         self.rax = plt.axes([0.41, 0.1, 0.15 / self.winAspect, 0.15])
@@ -193,18 +193,39 @@ class pltFig():
                         fill=255, width=self.lineWidth)
             self.imgPSF = np.asarray(self.pilPSF) / 255.
         elif self.psfMode == 'Paragram':
+            linelen = self.radius
             self.imgPSF = np.zeros([2 * hafy, 2 * hafx])
             self.pilPSF = Image.fromarray(self.imgPSF, 'L')
             draw = ImageDraw.Draw(self.pilPSF)
 
-            draw.polygon(((linelen * -np.cos(lineori) - linewidth * np.sin(skew) + hafx,
-                           linelen * -np.sin(lineori) - linewidth * np.cos(skew) + hafy),
-                          (linelen * -np.cos(lineori) + linewidth * np.sin(skew) + hafx,
-                           linelen * -np.sin(lineori) + linewidth * np.cos(skew) + hafy),
-                          (linelen *  np.cos(lineori) + linewidth * np.cos(skew) + hafx,
-                           linelen *  np.sin(lineori) - linewidth * np.sin(skew) + hafy),
-                          (linelen *  np.cos(lineori) + linewidth * np.sin(skew) + hafx,
-                           linelen *  np.sin(lineori) - linewidth * np.cos(skew) + hafy)), fill=255)
+            draw.line(((linelen * -np.cos(lineori) + hafx,
+                        linelen * -np.sin(lineori) + hafy,
+                        linelen *  np.cos(lineori) + hafx,
+                        linelen *  np.sin(lineori) + hafy)),
+                        fill=255, width=1)
+
+
+            skew = self.angleMod(lineori - skew)
+
+            print 'linori = %5.2f, skew = %5.2f, sin(%5.2f) = %5.2f' % (lineori, skew, np.sin(lineori - skew), skew)
+
+            draw.line(((linelen * -np.cos(lineori) + hafx,
+                        linelen * -np.sin(lineori) + hafy,
+                        linelen *  np.cos(lineori) + linewidth * np.sin(skew) + hafx,
+                        linelen *  np.sin(lineori) + linewidth * np.cos(skew) + hafy)),
+                        fill=255, width=1)
+
+            # draw.point((linelen * -np.cos(lineori) - linewidth * np.sin(skew) + hafx,
+            #                linelen * -np.sin(lineori) - linewidth * np.cos(skew) + hafy), fill=255)
+
+            # draw.polygon(((linelen * -np.cos(lineori) - linewidth * np.sin(skew) + hafx,
+            #                linelen * -np.sin(lineori) - linewidth * np.cos(skew) + hafy),
+            #               (linelen * -np.cos(lineori) + linewidth * np.sin(skew) + hafx,
+            #                linelen * -np.sin(lineori) + linewidth * np.cos(skew) + hafy),
+            #               (linelen *  np.cos(lineori) + linewidth * np.cos(skew) + hafx,
+            #                linelen *  np.sin(lineori) - linewidth * np.sin(skew) + hafy),
+            #               (linelen *  np.cos(lineori) + linewidth * np.sin(skew) + hafx,
+            #                linelen *  np.sin(lineori) - linewidth * np.cos(skew) + hafy)), fill=255)
             self.imgPSF = np.asarray(self.pilPSF) / 255.
 
 
@@ -299,6 +320,11 @@ class pltFig():
 
         return imgFile
 
+    def angleMod(self, angle):
+
+        sign = np.sign(angle)
+        return angle % (2 * np.pi) * sign
+
     def update1(self, val):
         figPlot.radius = self.slider1.val
         self.update()
@@ -312,12 +338,12 @@ class pltFig():
         self.update()
 
     def update4(self, val):
-        figPlot.lineWidth = int(self.slider4.val)
+        figPlot.lineWidth = self.slider4.val
         self.update()
 
 
     def update5(self, val):
-        figPlot.lineSkew = int(self.slider5.val)
+        figPlot.lineSkew = self.slider5.val
         self.update()
 
 
