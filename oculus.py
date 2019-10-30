@@ -198,52 +198,56 @@ class pltFig():
             self.pilPSF = Image.fromarray(self.imgPSF, 'L')
             draw = ImageDraw.Draw(self.pilPSF)
 
-            draw.line(((linelen * -np.cos(lineori) + hafx,
-                        linelen * -np.sin(lineori) + hafy,
-                        linelen *  np.cos(lineori) + hafx,
-                        linelen *  np.sin(lineori) + hafy)),
-                        fill=255, width=1)
+            # Draw line across the  center length linelen orientation lineori
+            # draw.line(((linelen * -np.cos(lineori) + hafx,
+            #             linelen * -np.sin(lineori) + hafy,
+            #             linelen *  np.cos(lineori) + hafx,
+            #             linelen *  np.sin(lineori) + hafy)),
+            #             fill=255, width=1)
 
 
             # skew = self.angleMod(lineori - skew)
 
-            print 'linori = %5.2f, skew = %5.2f, sin(%5.2f) = %5.2f' % (lineori, skew, np.sin(lineori - skew), skew)
+            # print 'linori = %5.2f, skew = %5.2f, sin(%5.2f) = %5.2f' % (lineori, skew, np.sin(lineori - skew), skew)
 
-            draw.line(((linelen * -np.cos(lineori) + hafx,
-                        linelen * -np.sin(lineori) + hafy,
-                        linelen * -np.cos(lineori) + linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
-                        linelen * -np.sin(lineori) + linewidth * np.cos(self.angleMod(skew - lineori)) + hafy)),
-                        fill=255, width=1)
+            # Draw four lines from the two ends of the oriented line to the four points of the parallelogram
+            # draw.line(((linelen * -np.cos(lineori) + hafx,
+            #             linelen * -np.sin(lineori) + hafy,
+            #             linelen * -np.cos(lineori) + linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
+            #             linelen * -np.sin(lineori) + linewidth * np.cos(self.angleMod(skew - lineori)) + hafy)),
+            #             fill=255, width=1)
+            #
+            # draw.line(((linelen * -np.cos(lineori) + hafx,
+            #             linelen * -np.sin(lineori) + hafy,
+            #             linelen * -np.cos(lineori) - linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
+            #             linelen * -np.sin(lineori) - linewidth * np.cos(self.angleMod(skew - lineori)) + hafy)),
+            #             fill=255, width=1)
+            #
+            # draw.line(((linelen * np.cos(lineori) + hafx,
+            #             linelen * np.sin(lineori) + hafy,
+            #             linelen * np.cos(lineori) + linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
+            #             linelen * np.sin(lineori) + linewidth * np.cos(self.angleMod(skew - lineori)) + hafy)),
+            #           fill=255, width=1)
+            #
+            # draw.line(((linelen * np.cos(lineori) + hafx,
+            #             linelen * np.sin(lineori) + hafy,
+            #             linelen * np.cos(lineori) - linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
+            #             linelen * np.sin(lineori) - linewidth * np.cos(self.angleMod(skew - lineori)) + hafy)),
+            #           fill=255, width=1)
+            #
 
-            draw.line(((linelen * -np.cos(lineori) + hafx,
-                        linelen * -np.sin(lineori) + hafy,
-                        linelen * -np.cos(lineori) - linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
-                        linelen * -np.sin(lineori) - linewidth * np.cos(self.angleMod(skew - lineori)) + hafy)),
-                        fill=255, width=1)
+            draw.polygon((
+                       (linelen * -np.cos(lineori) + linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
+                        linelen * -np.sin(lineori) + linewidth * np.cos(self.angleMod(skew - lineori)) + hafy),
+                       (linelen * -np.cos(lineori) - linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
+                        linelen * -np.sin(lineori) - linewidth * np.cos(self.angleMod(skew - lineori)) + hafy),
+                       (linelen * np.cos(lineori)  - linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
+                        linelen * np.sin(lineori)  - linewidth * np.cos(self.angleMod(skew - lineori)) + hafy),
+                       (linelen * np.cos(lineori)  + linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
+                        linelen * np.sin(lineori)  + linewidth * np.cos(self.angleMod(skew - lineori)) + hafy)),
+                        fill=255)
 
-            draw.line(((linelen * np.cos(lineori) + hafx,
-                        linelen * np.sin(lineori) + hafy,
-                        linelen * np.cos(lineori) + linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
-                        linelen * np.sin(lineori) + linewidth * np.cos(self.angleMod(skew - lineori)) + hafy)),
-                      fill=255, width=1)
-
-            draw.line(((linelen * np.cos(lineori) + hafx,
-                        linelen * np.sin(lineori) + hafy,
-                        linelen * np.cos(lineori) - linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
-                        linelen * np.sin(lineori) - linewidth * np.cos(self.angleMod(skew - lineori)) + hafy)),
-                      fill=255, width=1)
-
-
-            # draw.polygon(((linelen * -np.cos(lineori) - linewidth * np.sin(skew) + hafx,
-            #                linelen * -np.sin(lineori) - linewidth * np.cos(skew) + hafy),
-            #               (linelen * -np.cos(lineori) + linewidth * np.sin(skew) + hafx,
-            #                linelen * -np.sin(lineori) + linewidth * np.cos(skew) + hafy),
-            #               (linelen *  np.cos(lineori) + linewidth * np.cos(skew) + hafx,
-            #                linelen *  np.sin(lineori) - linewidth * np.sin(skew) + hafy),
-            #               (linelen *  np.cos(lineori) + linewidth * np.sin(skew) + hafx,
-            #                linelen *  np.sin(lineori) - linewidth * np.cos(skew) + hafy)), fill=255)
             self.imgPSF = np.asarray(self.pilPSF) / 255.
-
 
             # self.imgPSF = blob.returnBlobImage()
 
