@@ -205,18 +205,34 @@ class pltFig():
                         fill=255, width=1)
 
 
-            skew = self.angleMod(lineori - skew)
+            # skew = self.angleMod(lineori - skew)
 
             print 'linori = %5.2f, skew = %5.2f, sin(%5.2f) = %5.2f' % (lineori, skew, np.sin(lineori - skew), skew)
 
             draw.line(((linelen * -np.cos(lineori) + hafx,
                         linelen * -np.sin(lineori) + hafy,
-                        linelen *  np.cos(lineori) + linewidth * np.sin(skew) + hafx,
-                        linelen *  np.sin(lineori) + linewidth * np.cos(skew) + hafy)),
+                        linelen * -np.cos(lineori) + linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
+                        linelen * -np.sin(lineori) + linewidth * np.cos(self.angleMod(skew - lineori)) + hafy)),
                         fill=255, width=1)
 
-            # draw.point((linelen * -np.cos(lineori) - linewidth * np.sin(skew) + hafx,
-            #                linelen * -np.sin(lineori) - linewidth * np.cos(skew) + hafy), fill=255)
+            draw.line(((linelen * -np.cos(lineori) + hafx,
+                        linelen * -np.sin(lineori) + hafy,
+                        linelen * -np.cos(lineori) - linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
+                        linelen * -np.sin(lineori) - linewidth * np.cos(self.angleMod(skew - lineori)) + hafy)),
+                        fill=255, width=1)
+
+            draw.line(((linelen * np.cos(lineori) + hafx,
+                        linelen * np.sin(lineori) + hafy,
+                        linelen * np.cos(lineori) + linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
+                        linelen * np.sin(lineori) + linewidth * np.cos(self.angleMod(skew - lineori)) + hafy)),
+                      fill=255, width=1)
+
+            draw.line(((linelen * np.cos(lineori) + hafx,
+                        linelen * np.sin(lineori) + hafy,
+                        linelen * np.cos(lineori) - linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
+                        linelen * np.sin(lineori) - linewidth * np.cos(self.angleMod(skew - lineori)) + hafy)),
+                      fill=255, width=1)
+
 
             # draw.polygon(((linelen * -np.cos(lineori) - linewidth * np.sin(skew) + hafx,
             #                linelen * -np.sin(lineori) - linewidth * np.cos(skew) + hafy),
@@ -322,8 +338,7 @@ class pltFig():
 
     def angleMod(self, angle):
 
-        sign = np.sign(angle)
-        return angle % (2 * np.pi) * sign
+        return angle % (2 * np.pi)
 
     def update1(self, val):
         figPlot.radius = self.slider1.val
