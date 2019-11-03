@@ -146,9 +146,9 @@ class pltFig():
 
         self.fourier_filter()
 
-
         # Update filtered Fourier image
-        self.fourPlot.set_data(self.fourLog.real)
+        # self.fourPlot.set_data(self.fourLog.real * self.imgPSF)
+        self.fourPlot.set_data(((self.fourLog.real * self.imgPSF + self.fourLog.real)/2.))
 
         # Update PSF image
         self.psfPlot.set_data(self.imgPSF)
