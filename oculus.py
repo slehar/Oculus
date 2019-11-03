@@ -14,6 +14,7 @@ from   matplotlib.widgets import RadioButtons
 from   PIL import Image, ImageDraw
 import Tkinter, tkFileDialog
 import numpy as np
+np.seterr(divide='ignore', invalid='ignore') # Ignore divide-by-zero errors
 import utils
 import blob
 
@@ -46,9 +47,9 @@ class pltFig():
         self.axAfter  = utils.get_axes(self.fig, [.35, .6, .36 / self.winAspect, .36], 'After')
         self.axDiag   = utils.get_axes(self.fig, [.65, .2, .36 / self.winAspect, .36], 'Diagnostic')
 
-        # Disc / Line / Paragram Checkbox
-        self.rax = plt.axes([0.41, 0.1, 0.15 / self.winAspect, 0.15])
-        self.radio = RadioButtons(self.rax, ['Disc', 'Line', 'Paragram'])
+        # Disc / Line / Parallelogram Checkbox
+        self.rax = plt.axes([0.41, 0.05, 0.2 / self.winAspect, 0.2])
+        self.radio = RadioButtons(self.rax, ['Disc', 'Line', 'Parallelogram'])
 
         # Read Before image
         imgFile = self.get_image()
@@ -64,7 +65,7 @@ class pltFig():
         # Display before image
         plt.sca(self.axBefore)
         self.beforePlot = plt.imshow(self.imgNp, cmap='gray')
-        plt.pause(1.)
+        plt.pause(.15)
 
         # First Pass Hanning
         han = np.outer(np.hanning(self.ySize), np.hanning(self.xSize))
@@ -73,68 +74,42 @@ class pltFig():
         # Display hanning image
         self.beforePlot.set_data(self.imgHan)
 
-        # Generate PSF image
-        K = np.zeros(self.imgNp.shape)  # array for inverse filter
-        yy, xx = np.mgrid[-self.hafY:self.hafY, -self.hafX:self.hafX]
-        self.distImg = np.sqrt(xx ** 2 + yy ** 2)
-        imgPSF = (self.distImg < self.radius)  # This is a Disc PSF
-
-        # Display PSF image
-        plt.sca(self.axPSF)
-        self.psfPlot = plt.imshow(imgPSF, cmap='gray')
-
-        # Fourier Transform
-        fourImg = np.fft.fft2(self.imgHan)  # set dc term to 1 to control contrast
-        fourImg[0, 0] = 1.0 + 0j
-        self.fourShft = np.fft.fftshift(fourImg)
-        self.fourLog = np.log(np.abs(self.fourShft))
-        self.fourLog = self.fourLog / complex(self.fourLog.max())
-
-        # Display Fourier image
-        plt.sca(self.axFour)
-        self.fourPlot = plt.imshow(self.fourLog.real, cmap='gray')
-
-        # take transform of PSF
-        fourPSF = np.fft.fft2(imgPSF)
-        fourShftPSF = np.fft.fftshift(fourPSF)
-        psfLog = np.log(np.maximum(np.abs(fourShftPSF), 1.))
-        psfLog = psfLog / complex(psfLog.max())
-
-        # Display PSF transform image
-        # self.fourPlot.set_data(psfLog.real)
-
-        # Create the Linear MAP filter, K(u,v)
-        isnr = 1. / self.snr
-        conjfourPSF = np.conj(fourPSF)
-        K = (conjfourPSF + isnr) / ((conjfourPSF * fourPSF) + isnr)
-        KLog = np.log(np.maximum(np.abs(K), 1.))
-        KLog = KLog / complex(KLog.max())  # normalizing 0 to 1
-
-        # Display KLog image
-        plt.sca(self.axDiag)
-        self.diagPlot = plt.imshow(KLog.real, cmap='gray')
-
-        # do the inverse filtering
-        fourResult = self.fourShft * K  # convolution in the fourier domain
-
-        # Inverse Fourier Transform
-        fourIshft = np.fft.ifftshift(fourResult)
-        fourIshft[0, 0] = 0.5 + 0.0j  # set d.c. term for display
-        self.fourInv = np.fft.ifft2(fourIshft)
-
-        #   Swap quadrants
-        self.fourInv = np.fft.ifftshift(self.fourInv)
-
-        # Display After image
-        plt.sca(self.axAfter)
-        self.invPlot = plt.imshow(self.fourInv.real, cmap='gray')
-
         # Slider 1
         hafRadiusMax = min(self.ySize, self.xSize)  # Setting upper limit to radius focus blur
         self.slider1 = utils.get_slider(self.fig, [0.35, 0.5, 0.234, 0.04], 'radius', 0.5, hafRadiusMax / 10, valinit=5.)
         rad1 = np.log(self.slider1.val)  # make log control
         self.slider1.valtext.set_text(rad1)
         self.slider1.on_changed(self.update1)
+
+        # Set PSF image based on mode
+        self.imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
+        self.pilPSF = Image.fromarray(self.imgPSF, 'L')
+        # self.draw   = ImageDraw.Draw(self.pilPSF)
+
+        # Generate PSF image
+        self.modefunc('Disc')
+
+        # Display PSF image
+        plt.sca(self.axPSF)
+        self.psfPlot = plt.imshow(self.imgPSF, cmap='gray')
+
+        # Do Fourier filtering
+        self.fourier_filter()
+
+        # Display Fourier image
+        plt.sca(self.axFour)
+        self.fourPlot = plt.imshow(self.fourLog.real, cmap='gray')
+
+        # Display Fourier inverse image
+        plt.sca(self.axAfter)
+        self.invPlot = plt.imshow(self.fourInv.real, cmap='gray')
+
+        # Display KLog image
+        plt.sca(self.axDiag)
+        self.diagPlot = plt.imshow(self.KLog.real, cmap='gray')
+
+        # Display After image
+        plt.sca(self.axAfter)
 
         # Slider 2
         self.slider2 = utils.get_slider(self.fig, [0.35, 0.4509, 0.234, 0.04], 'angle', -np.pi, np.pi, valinit=0.)
@@ -160,9 +135,6 @@ class pltFig():
 
         self.diagPlot.set_data(self.imgHan)
 
-        imgPSF = imgPSF.astype(float)
-        self.psfPlot.set_data(imgPSF)
-
         self.radio.on_clicked(self.modefunc)
 
         self.fig.canvas.mpl_connect('key_press_event', self.press)
@@ -171,118 +143,118 @@ class pltFig():
     def update(self):
         ''' Update display when sliders change '''
 
-        linelen = self.lineLength
-        linewidth = self.lineWidth
-        lineori = self.lineOri
-        skew    = self.lineSkew
-        radius  = self.radius
-        hafx, hafy = self.hafX, self.hafY
 
-        # PSF in axPSF
-        if self.psfMode == 'Disc':
-            self.imgPSF = (self.distImg < radius)  # This is a Disc PSF
-        elif self.psfMode == 'Line':
-            self.lineLength = radius * 3.
-            self.imgPSF = np.zeros([2 * hafy, 2 * hafx])
-            self.pilPSF = Image.fromarray(self.imgPSF, 'L')
-            draw = ImageDraw.Draw(self.pilPSF)
-            draw.line(((linelen * -np.cos(lineori) + hafx,
-                        linelen * -np.sin(lineori) + hafy,
-                        linelen *  np.cos(lineori) + hafx,
-                        linelen *  np.sin(lineori) + hafy)),
-                        fill=255, width=self.lineWidth)
-            self.imgPSF = np.asarray(self.pilPSF) / 255.
-        elif self.psfMode == 'Paragram':
-            linelen = self.radius
-            self.imgPSF = np.zeros([2 * hafy, 2 * hafx])
-            self.pilPSF = Image.fromarray(self.imgPSF, 'L')
-            draw = ImageDraw.Draw(self.pilPSF)
+        self.fourier_filter()
 
-            draw.polygon((
-                       (linelen * -np.cos(lineori) + linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
-                        linelen * -np.sin(lineori) + linewidth * np.cos(self.angleMod(skew - lineori)) + hafy),
-                       (linelen * -np.cos(lineori) - linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
-                        linelen * -np.sin(lineori) - linewidth * np.cos(self.angleMod(skew - lineori)) + hafy),
-                       (linelen * np.cos(lineori)  - linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
-                        linelen * np.sin(lineori)  - linewidth * np.cos(self.angleMod(skew - lineori)) + hafy),
-                       (linelen * np.cos(lineori)  + linewidth * np.sin(self.angleMod(skew - lineori)) + hafx,
-                        linelen * np.sin(lineori)  + linewidth * np.cos(self.angleMod(skew - lineori)) + hafy)),
-                        fill=255)
 
-            self.imgPSF = np.asarray(self.pilPSF) / 255.
-
-            # self.imgPSF = blob.returnBlobImage()
-
-        realimgPSF = self.imgPSF.astype(float)
-        self.psfPlot.set_data(realimgPSF)
-
-        # take transform of psf and display it
-        fourPSF = np.fft.fft2(self.imgPSF)
-        self.fourShftPSF = np.fft.fftshift(fourPSF)
-        psfLog = np.log(np.maximum(np.abs(self.fourShftPSF), 1.))
-        psfLog = psfLog / complex(psfLog.max())
-
-        # Create the Linear MAP filter, K(u,v)
-        isnr = 1. / self.snr
-        conjfourPSF = np.conj(fourPSF)
-        K = (conjfourPSF + isnr) / ((conjfourPSF * fourPSF) + isnr)
-        #    print K[hafY:hafY+1,hafX:hafX+1]    #is this the d.c. term?
-        KLog = np.log(np.maximum(np.abs(K), 1.))
-        KLog = KLog / complex(KLog.max())  # normalizing 0 to 1
-        self.diagPlot.set_data(KLog.real)  # Plotting diag data
-        norm = np.sum(K)  # for normalizing K
-
-        # Display filtered Fourier image
+        # Update filtered Fourier image
         self.fourPlot.set_data(self.fourLog.real)
 
-        # do the inverse filtering
-        fourResult = self.fourShft * K  # convolution in the fourier domain
+        # Update PSF image
+        self.psfPlot.set_data(self.imgPSF)
 
-        # Inverse Fourier Transform
-        fourIshft = np.fft.ifftshift(fourResult)
-        fourIshft[0, 0] = 0.5 + 0.0j  # set d.c. term for display
-        self.fourInv = np.fft.ifft2(fourIshft)
-
-        # Swap quadrants
-        self.fourInv = np.fft.ifftshift(self.fourInv)
+        # Update inverse after image
         self.invPlot.set_data(self.fourInv.real)
+
+        # Display diagnostic KLog image
+        self.diagPlot.set_data(self.KLog.real)
+
+
+
+
 
 
 
 
     def modefunc(self, label):
+
+
         if label == 'Disc':
             self.psfMode = 'Disc'
+
+            # Generate disc PSF
+            self.K = np.zeros(self.imgNp.shape)  # array for inverse filter
+            yy, xx = np.mgrid[-self.hafY:self.hafY, -self.hafX:self.hafX]
+            self.distImg = np.sqrt(xx ** 2 + yy ** 2)
+
             self.imgPSF = (self.distImg < self.radius)  # This is a Disc PSF
             self.slider1.label = 'radius'
+
         if label == 'Line':
             self.psfMode = 'Line'
             self.lineLength = self.radius * 3.
-            self.imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
-            pilPSF = Image.fromarray(self.imgPSF, 'L')
+            imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
+            pilPSF = Image.fromarray(imgPSF, 'L')
             self.slider1.label = 'length'
-            print self.slider1.label
             draw = ImageDraw.Draw(pilPSF)
             draw.line(((
                 self.lineLength * -np.cos(self.lineOri) + self.hafX,
                 self.lineLength * -np.sin(self.lineOri) + self.hafY,
                 self.lineLength * np.cos(self.lineOri) + self.hafX,
                 self.lineLength * np.sin(self.lineOri) + self.hafY)),
-                fill=255, width=self.lineWidth)
+                fill=255, width=int(self.lineWidth))
             self.imgPSF = np.asarray(pilPSF) / 255.
 
-        if label == 'Paragram':
-            self.psfMode = 'Paragram'
-            # blobFig, blobAx = blob.openBlobWindow()
-            # self.fig.canvas.draw()
-            # self.imgPSF = blob.returnBlobImage()
+        if label == 'Parallelogram':
+            self.psfMode = 'Parallelogram'
+            self.slider1.label = 'length'
 
-            self.imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
-            self.imgPSF = self.imgPSF.astype(float)
+            self.lineLength = self.radius
+            imgPSF = np.zeros([2 * self.hafY, 2 * self.hafX])
+            pilPSF = Image.fromarray(imgPSF, 'L')
+            draw = ImageDraw.Draw(pilPSF)
+            draw.polygon((
+                       (self.lineLength * -np.cos(self.lineOri) + self.lineWidth * np.sin(self.angleMod(self.lineSkew - self.lineOri)) + self.hafX,
+                        self.lineLength * -np.sin(self.lineOri) + self.lineWidth * np.cos(self.angleMod(self.lineSkew - self.lineOri)) + self.hafY),
+                       (self.lineLength * -np.cos(self.lineOri) - self.lineWidth * np.sin(self.angleMod(self.lineSkew - self.lineOri)) + self.hafX,
+                        self.lineLength * -np.sin(self.lineOri) - self.lineWidth * np.cos(self.angleMod(self.lineSkew - self.lineOri)) + self.hafY),
+                       (self.lineLength * np.cos(self.lineOri)  - self.lineWidth * np.sin(self.angleMod(self.lineSkew - self.lineOri)) + self.hafX,
+                        self.lineLength * np.sin(self.lineOri)  - self.lineWidth * np.cos(self.angleMod(self.lineSkew - self.lineOri)) + self.hafY),
+                       (self.lineLength * np.cos(self.lineOri)  + self.lineWidth * np.sin(self.angleMod(self.lineSkew - self.lineOri)) + self.hafX,
+                        self.lineLength * np.sin(self.lineOri)  + self.lineWidth * np.cos(self.angleMod(self.lineSkew - self.lineOri)) + self.hafY)),
+                        fill=255)
+            self.imgPSF = np.asarray(pilPSF) / 255.
 
+        print '\nIn Modefunc Psf mode = %s' % self.psfMode
 
-        self.update()
+        # self.update()
         plt.draw()
+
+    def fourier_filter(self):
+
+        # Fourier Transform
+        fourImg = np.fft.fft2(self.imgHan)  # set dc term to 1 to control contrast
+        fourImg[0, 0] = 1.0 + 0j
+        self.fourShft = np.fft.fftshift(fourImg)
+        self.fourLog = np.log(np.abs(self.fourShft))
+        self.fourLog = self.fourLog / complex(self.fourLog.max())
+
+        # take transform of PSF
+        self.fourPSF = np.fft.fft2(self.imgPSF)
+        fourShftPSF = np.fft.fftshift(self.fourPSF)
+        self.psfLog = np.log(np.maximum(np.abs(fourShftPSF), 1.))
+        self.psfLog = self.psfLog / complex(self.psfLog.max())
+
+        # Create the Linear MAP filter, K(u,v)
+        isnr = 1. / self.snr
+        conjfourPSF = np.conj(self.fourPSF)
+        self.K = (conjfourPSF + isnr) / ((conjfourPSF * self.fourPSF) + isnr)
+        self.KLog = np.log(np.maximum(np.abs(self.K), 1.))
+        self.KLog = self.KLog / complex(self.KLog.max())  # normalizing 0 to 1
+
+        # do the inverse filtering
+        self.fourResult = self.fourShft * self.K  # convolution in the fourier domain
+
+        # Inverse Fourier Transform
+        self.fourIshft = np.fft.ifftshift(self.fourResult)
+        self.fourIshft[0, 0] = 0.5 + 0.0j  # set d.c. term for display
+        self.fourInv = np.fft.ifft2(self.fourIshft)
+
+        #   Swap quadrants
+        self.fourInv = np.fft.ifftshift(self.fourInv)
+
+
+
 
     def press(self, event):
 
@@ -307,29 +279,35 @@ class pltFig():
         return angle % (2 * np.pi)
 
     def update1(self, val):
-        figPlot.radius = self.slider1.val
+        figPlot.radius     = self.slider1.val
+        figPlot.lineLength = self.slider1.val
+        self.modefunc(self.psfMode)
         self.update()
 
     def update2(self, val):
         figPlot.lineOri = self.slider2.val
+        self.modefunc(self.psfMode)
         self.update()
 
     def update3(self, val):
         figPlot.snr = self.slider3.val
+        self.modefunc(self.psfMode)
         self.update()
 
     def update4(self, val):
         figPlot.lineWidth = self.slider4.val
+        self.modefunc(self.psfMode)
         self.update()
 
 
     def update5(self, val):
         figPlot.lineSkew = self.slider5.val
+        self.modefunc(self.psfMode)
         self.update()
 
 
 figPlot = pltFig()
 
-plt.show()
+plt.show(block=True)
 
 
