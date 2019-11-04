@@ -18,6 +18,7 @@ np.seterr(divide='ignore', invalid='ignore') # Ignore divide-by-zero errors
 import utils
 import blob
 
+
 class pltFig():
     ''' Plot Figure class '''
 
@@ -54,7 +55,7 @@ class pltFig():
         # Read Before image
         imgFile = self.get_image()
         imgPil = Image.open(imgFile).convert('LA')  # LA = 'luminance + alpha
-        self.imgNp = np.array(imgPil.convert('L')) / 255.  # convert to L, luminance only
+        self.imgNp = np.array(imgPil.convert('L')) / 255.  # Normalize to range [0-1]
         self.ySize, self.xSize = self.imgNp.shape
         self.hafY, self.hafX = int(self.ySize / 2), int(self.xSize / 2)
 
@@ -147,6 +148,7 @@ class pltFig():
         self.fourier_filter()
 
         # Update filtered Fourier image
+        # self.fourPlot.set_data(self.fourLog.real)
         # self.fourPlot.set_data(self.fourLog.real * self.imgPSF)
         self.fourPlot.set_data(((self.fourLog.real * self.imgPSF + self.fourLog.real)/2.))
 
@@ -223,8 +225,8 @@ class pltFig():
     def fourier_filter(self):
 
         # Fourier Transform
-        fourImg = np.fft.fft2(self.imgHan)  # set dc term to 1 to control contrast
-        fourImg[0, 0] = 1.0 + 0j
+        fourImg = np.fft.fft2(self.imgHan)
+        fourImg[0, 0] = 1.0 + 0j   # set dc term to 1 to control contrast
         self.fourShft = np.fft.fftshift(fourImg)
         self.fourLog = np.log(np.abs(self.fourShft))
         self.fourLog = self.fourLog / complex(self.fourLog.max())
