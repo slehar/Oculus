@@ -27,6 +27,68 @@ def get_axes(fig, rect, title=None):
         ax.set_title(title)
     return ax
 
+def xcorr(x):
+    """FFT based autocorrelation function, which is faster than numpy.correlate"""
+    # x is supposed to be an array of sequences, of shape (totalelements, length)
+    # https://stackoverflow.com/questions/4503325/autocorrelation-of-a-multidimensional-array-in-numpy
+    fftx = np.fft.fft2(x)
+    ret = np.fft.ifft(fftx * np.conjugate(fftx), axis=1)
+    ret = np.fft.fftshift(ret, axes=1)
+    return ret
+
+from itertools import product
+from numpy import empty, roll
+
+def autocorrelate(x):
+    """
+    Compute the multidimensional autocorrelation of an nd array.
+    input: an nd array of floats
+    output: an nd array of autocorrelations
+    """
+
+    # used for transposes
+    t = roll(range(x.ndim), 1)
+
+    # pairs of indexes
+    # the first is for the autocorrelation array
+    # the second is the shift
+    ii = [list(enumerate(range(1, s - 1))) for s in x.shape]
+
+    # initialize the resulting autocorrelation array
+    acor = empty(shape=[len(s0) for s0 in ii])
+
+    # iterate over all combinations of directional shifts
+    for i in product(*ii):
+        # extract the indexes for
+        # the autocorrelation array
+        # and original array respectively
+        i1, i2 = np.asarray(i).T
+
+        x1 = x.copy()
+        x2 = x.copy()
+
+        for i0 in i2:
+            # clip the unshifted array at the end
+            x1 = x1[:-i0]
+            # and the shifted array at the beginning
+            x2 = x2[i0:]
+
+            # prepare to do the same for
+            # the next axis
+            x1 = x1.transpose(t)
+            x2 = x2.transpose(t)
+
+        # normalize shifted and unshifted arrays
+        x1 -= x1.mean()
+        x1 /= x1.std()
+        x2 -= x2.mean()
+        x2 /= x2.std()
+
+        # compute the autocorrelation directly
+        # from the definition
+        acor[tuple(i1)] = (x1 * x2).mean()
+
+    return acor
 
 # Axes for Images
 axPSF    = get_axes(fig, [.05, .6, .36 / winAspect, .36], 'PSF')
@@ -56,7 +118,24 @@ psfPlot = plt.imshow(imgPSF, cmap='gray')
 
 # Autocorrelation of the PSF
 floatPSF = np.array(imgPSF, dtype=float)
-autocorr = signal.correlate2d(floatPSF, floatPSF) # works - but takes 30 seconds!!!
+
+choice = 'signal.correlate2d'
+# choice = 'xcorr'
+# choice = 'autocorrelate'
+
+
+if choice == 'signal.correlate2d':
+    # Using signal.correlate2d
+    autocorr = signal.correlate2d(floatPSF, floatPSF) # works - but takes 30 seconds!!!
+
+elif choice == 'xcorr':
+    # Using xcorr
+    autocorr = xcorr(floatPSF)
+
+elif choice == 'autocorrelate':
+    # Using autocorrelate
+    autocorr = autocorrelate(floatPSF) / 255. # Takes 1:15 min:sec and is wrong!
+
 
 # Copy to diagnostic image
 imgDiag = np.array(autocorr, dtype=int)
