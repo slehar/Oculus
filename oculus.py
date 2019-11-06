@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from   matplotlib.widgets import RadioButtons
 from   PIL import Image, ImageDraw
 import Tkinter, tkFileDialog
+from scipy import signal
 import numpy as np
 np.seterr(divide='ignore', invalid='ignore') # Ignore divide-by-zero errors
 import utils
@@ -69,11 +70,11 @@ class pltFig():
         plt.pause(.15)
 
         # First Pass Hanning
-        han = np.outer(np.hanning(self.ySize), np.hanning(self.xSize))
-        self.imgHan = self.imgNp * han  # apply hanning window
-
-        # Display hanning image
-        self.beforePlot.set_data(self.imgHan)
+        # han = np.outer(np.hanning(self.ySize), np.hanning(self.xSize))
+        # self.imgNp = self.imgNp * han  # apply hanning window
+        #
+        # # Display hanning image
+        # self.beforePlot.set_data(self.imgNp)
 
         # Slider 1
         hafRadiusMax = min(self.ySize, self.xSize)  # Setting upper limit to radius focus blur
@@ -132,9 +133,9 @@ class pltFig():
         self.lineSkew = self.slider5.val
         self.slider5.on_changed(self.update5)
 
-        self.beforePlot.set_data(self.imgHan)
+        self.beforePlot.set_data(self.imgNp)
 
-        self.diagPlot.set_data(self.imgHan)
+        self.diagPlot.set_data(self.imgNp)
 
         self.radio.on_clicked(self.modefunc)
 
@@ -159,8 +160,10 @@ class pltFig():
         self.invPlot.set_data(self.fourInv.real)
 
         # Display diagnostic KLog image
-        self.diagPlot.set_data(self.KLog.real)
+        # self.diagPlot.set_data(self.KLog.real)
+        self.diagPlot.set_data(self.imgDiag.real)
 
+        plt.draw()
 
 
 
@@ -217,7 +220,7 @@ class pltFig():
                         fill=255)
             self.imgPSF = np.asarray(pilPSF) / 255.
 
-        print '\nIn Modefunc Psf mode = %s' % self.psfMode
+        # print '\nIn Modefunc Psf mode = %s' % self.psfMode
 
         # self.update()
         plt.draw()
@@ -225,11 +228,26 @@ class pltFig():
     def fourier_filter(self):
 
         # Fourier Transform
-        fourImg = np.fft.fft2(self.imgHan)
+        fourImg = np.fft.fft2(self.imgNp)
         fourImg[0, 0] = 1.0 + 0j   # set dc term to 1 to control contrast
         self.fourShft = np.fft.fftshift(fourImg)
         self.fourLog = np.log(np.abs(self.fourShft))
         self.fourLog = self.fourLog / complex(self.fourLog.max())
+
+        # Autocorrelation of the PSF
+        # self.imgDiag = self.autocorrelate(self.imgPSF)
+        floatPSF = np.array(self.imgPSF, dtype=float)
+        floatPSFcopy = floatPSF
+
+        autocorr = signal.correlate2d(floatPSF, floatPSFcopy)
+        self.imgDiag = np.array(autocorr, dtype=int)
+        # fourPSF = np.fft.fft(self.imgPSF)
+
+        # self.imgDiag = np.fft.ifft(fourPSF * np.conjugate(fourPSF), axis=1).real
+        # self.imgDiag = np.abs(np.fft.ifft(fourPSF * np.conjugate(fourPSF), axis=1))
+        # self.imgDiag = np.abs((fourPSF * np.conjugate(fourPSF)))
+
+        # dataAC = ifft(dataFT * numpy.conjugate(dataFT), axis=1).real
 
         # take transform of PSF
         self.fourPSF = np.fft.fft2(self.imgPSF)
@@ -240,12 +258,12 @@ class pltFig():
         # Create the Linear MAP filter, K(u,v)
         isnr = 1. / self.snr
         conjfourPSF = np.conj(self.fourPSF)
-        self.K = (conjfourPSF + isnr) / ((conjfourPSF * self.fourPSF) + isnr)
+        self.K = (conjfourPSF + isnr) / ((conjfourPSF * self.fourPSF) + isnr) # Wiener Filter Mike Cannon
         self.KLog = np.log(np.maximum(np.abs(self.K), 1.))
         self.KLog = self.KLog / complex(self.KLog.max())  # normalizing 0 to 1
 
         # do the inverse filtering
-        self.fourResult = self.fourShft * self.K  # convolution in the fourier domain
+        self.fourResult = self.fourShft * self.K  # convolution in the spatial domain
 
         # Inverse Fourier Transform
         self.fourIshft = np.fft.ifftshift(self.fourResult)
@@ -279,6 +297,19 @@ class pltFig():
     def angleMod(self, angle):
 
         return angle % (2 * np.pi)
+
+    def autocorrelate(self, x):
+        # result = np.correlate(x, x, mode='full')
+        result = np.correlate(x, x, mode='full')
+        return result[result.size / 2:]
+
+    def xcorr(x):
+        """FFT based autocorrelation function, which is faster than numpy.correlate"""
+        # x is supposed to be an array of sequences, of shape (totalelements, length)
+        fftx = np.fft(x, n=(length * 2 - 1), axis=1)
+        ret = np.ifft(fftx * np.conjugate(fftx), axis=1)
+        ret = np.fftshift(ret, axes=1)
+        return ret
 
     def update1(self, val):
         figPlot.radius     = self.slider1.val
